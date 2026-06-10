@@ -1,5 +1,5 @@
-import { n as DemoWorkspaceProvider, t as useDemoWorkspace } from "./useDemoWorkspace-BjowWMof.js";
-import { t as Route$4 } from "./cases._caseId-Y-YiEW3S.js";
+import { n as DemoWorkspaceProvider, t as useDemoWorkspace } from "./useDemoWorkspace-xnVl1622.js";
+import { t as Route$5 } from "./_caseId-DkNVV6vA.js";
 import { HeadContent, Link, Outlet, Scripts, createFileRoute, createRootRoute, createRouter, lazyRouteComponent, useRouterState } from "@tanstack/react-router";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { AppShell, Box, Button, ColorSchemeScript, Group, MantineProvider, SegmentedControl, Select, Stack, Text, ThemeIcon, Title, createTheme } from "@mantine/core";
@@ -151,7 +151,7 @@ var theme = createTheme({
 	fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
 	headings: { fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif" }
 });
-var Route$3 = createRootRoute({
+var Route$4 = createRootRoute({
 	head: () => ({ meta: [
 		{ charSet: "utf-8" },
 		{
@@ -180,44 +180,56 @@ function RootDocument({ children }) {
 }
 //#endregion
 //#region src/routes/reports.tsx
-var $$splitComponentImporter$2 = () => import("./reports-Em6FeSKO.js");
-var Route$2 = createFileRoute("/reports")({ component: lazyRouteComponent($$splitComponentImporter$2, "component") });
+var $$splitComponentImporter$3 = () => import("./reports-JLdfXd35.js");
+var Route$3 = createFileRoute("/reports")({ component: lazyRouteComponent($$splitComponentImporter$3, "component") });
 //#endregion
-//#region src/routes/cases.tsx
-var $$splitComponentImporter$1 = () => import("./cases-L_zDD1Ox.js");
-var Route$1 = createFileRoute("/cases")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
+//#region src/routes/cases/route.tsx
+var $$splitComponentImporter$2 = () => import("./route-BoHY-RXt.js");
+var Route$2 = createFileRoute("/cases")({ component: lazyRouteComponent($$splitComponentImporter$2, "component") });
 //#endregion
 //#region src/routes/index.tsx
-var $$splitComponentImporter = () => import("./routes-DBWZLW8f.js");
-var Route = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter, "component") });
+var $$splitComponentImporter$1 = () => import("./routes-Chfg7RbX.js");
+var Route$1 = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
+//#endregion
+//#region src/routes/cases/index.tsx
+var $$splitComponentImporter = () => import("./cases-UVBbZUMz.js");
+var Route = createFileRoute("/cases/")({ component: lazyRouteComponent($$splitComponentImporter, "component") });
 //#endregion
 //#region src/routeTree.gen.ts
-var ReportsRoute = Route$2.update({
+var ReportsRoute = Route$3.update({
 	id: "/reports",
 	path: "/reports",
-	getParentRoute: () => Route$3
+	getParentRoute: () => Route$4
 });
-var CasesRoute = Route$1.update({
+var CasesRouteRoute = Route$2.update({
 	id: "/cases",
 	path: "/cases",
-	getParentRoute: () => Route$3
+	getParentRoute: () => Route$4
 });
-var IndexRoute = Route.update({
+var IndexRoute = Route$1.update({
 	id: "/",
 	path: "/",
-	getParentRoute: () => Route$3
+	getParentRoute: () => Route$4
 });
-var CasesRouteChildren = { CasesCaseIdRoute: Route$4.update({
-	id: "/$caseId",
-	path: "/$caseId",
-	getParentRoute: () => CasesRoute
-}) };
+var CasesIndexRoute = Route.update({
+	id: "/",
+	path: "/",
+	getParentRoute: () => CasesRouteRoute
+});
+var CasesRouteRouteChildren = {
+	CasesCaseIdRoute: Route$5.update({
+		id: "/$caseId",
+		path: "/$caseId",
+		getParentRoute: () => CasesRouteRoute
+	}),
+	CasesIndexRoute
+};
 var rootRouteChildren = {
 	IndexRoute,
-	CasesRoute: CasesRoute._addFileChildren(CasesRouteChildren),
+	CasesRouteRoute: CasesRouteRoute._addFileChildren(CasesRouteRouteChildren),
 	ReportsRoute
 };
-var routeTree = Route$3._addFileChildren(rootRouteChildren)._addFileTypes();
+var routeTree = Route$4._addFileChildren(rootRouteChildren)._addFileTypes();
 //#endregion
 //#region src/router.tsx
 function getRouter() {

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { jsx } from "react/jsx-runtime";
+import dayjs from "dayjs";
 //#region src/domain/demo-data.ts
 var programs = [
 	{
@@ -55,6 +56,18 @@ var staff = [
 		programs: ["areset-work", "clinical"]
 	},
 	{
+		id: "u-6",
+		name: "Riley Chen",
+		role: "Caseworker",
+		programs: ["anf-parents", "clinical"]
+	},
+	{
+		id: "u-7",
+		name: "Taylor Nguyen",
+		role: "Caseworker",
+		programs: ["areset-work", "basic-needs"]
+	},
+	{
 		id: "u-4",
 		name: "Priya Nair",
 		role: "Program Supervisor",
@@ -99,7 +112,13 @@ var initialCases = [
 			{
 				id: "enr-1",
 				programId: "anf-parents",
-				caseworkerId: "u-1",
+				caseworkers: [{
+					staffId: "u-1",
+					isPrimary: true
+				}, {
+					staffId: "u-6",
+					isPrimary: false
+				}],
 				supervisorId: "u-2",
 				status: "Active",
 				opened: "2026-04-02",
@@ -109,7 +128,13 @@ var initialCases = [
 			{
 				id: "enr-2",
 				programId: "basic-needs",
-				caseworkerId: "u-1",
+				caseworkers: [{
+					staffId: "u-1",
+					isPrimary: true
+				}, {
+					staffId: "u-7",
+					isPrimary: false
+				}],
 				supervisorId: "u-4",
 				status: "Active",
 				opened: "2026-04-04",
@@ -119,7 +144,13 @@ var initialCases = [
 			{
 				id: "enr-3",
 				programId: "clinical",
-				caseworkerId: "u-3",
+				caseworkers: [{
+					staffId: "u-6",
+					isPrimary: true
+				}, {
+					staffId: "u-3",
+					isPrimary: false
+				}],
 				supervisorId: "u-2",
 				status: "Pending",
 				opened: "2026-06-03",
@@ -165,7 +196,13 @@ var initialCases = [
 		enrollments: [{
 			id: "enr-4",
 			programId: "basic-needs",
-			caseworkerId: "u-1",
+			caseworkers: [{
+				staffId: "u-1",
+				isPrimary: true
+			}, {
+				staffId: "u-7",
+				isPrimary: false
+			}],
 			supervisorId: "u-4",
 			status: "Active",
 			opened: "2026-05-11",
@@ -206,7 +243,13 @@ var initialCases = [
 		enrollments: [{
 			id: "enr-5",
 			programId: "areset-work",
-			caseworkerId: "u-3",
+			caseworkers: [{
+				staffId: "u-3",
+				isPrimary: true
+			}, {
+				staffId: "u-7",
+				isPrimary: false
+			}],
 			supervisorId: "u-4",
 			status: "Active",
 			opened: "2026-03-18",
@@ -215,7 +258,13 @@ var initialCases = [
 		}, {
 			id: "enr-6",
 			programId: "basic-needs",
-			caseworkerId: "u-1",
+			caseworkers: [{
+				staffId: "u-7",
+				isPrimary: true
+			}, {
+				staffId: "u-1",
+				isPrimary: false
+			}],
 			supervisorId: "u-4",
 			status: "Active",
 			opened: "2026-04-15",
@@ -282,7 +331,13 @@ var initialCases = [
 		enrollments: [{
 			id: "enr-7",
 			programId: "clinical",
-			caseworkerId: "u-3",
+			caseworkers: [{
+				staffId: "u-3",
+				isPrimary: true
+			}, {
+				staffId: "u-6",
+				isPrimary: false
+			}],
 			supervisorId: "u-2",
 			status: "Completed",
 			opened: "2025-11-03",
@@ -301,7 +356,9 @@ var initialNotes = [
 		date: "2026-06-05",
 		contactType: "Home visit",
 		summary: "Parenting group follow-up",
-		body: "Alicia attended the second parenting circle. Discussed child care schedule and summer meals."
+		body: "Alicia attended the second parenting circle. Discussed child care schedule and summer meals.",
+		isSession: true,
+		sessionHours: 1.25
 	},
 	{
 		id: "note-2",
@@ -311,7 +368,8 @@ var initialNotes = [
 		date: "2026-06-02",
 		contactType: "Service coordination",
 		summary: "Medication bridge approved",
-		body: "Confirmed pharmacy quote for diabetes medication and routed service request to Basic Needs."
+		body: "Confirmed pharmacy quote for diabetes medication and routed service request to Basic Needs.",
+		isSession: false
 	},
 	{
 		id: "note-3",
@@ -321,7 +379,9 @@ var initialNotes = [
 		date: "2026-06-06",
 		contactType: "Phone",
 		summary: "CDL class start date",
-		body: "Marcus confirmed CDL class begins June 17. Needs boots and state testing fee by June 14."
+		body: "Marcus confirmed CDL class begins June 17. Needs boots and state testing fee by June 14.",
+		isSession: true,
+		sessionHours: .5
 	},
 	{
 		id: "note-4",
@@ -331,7 +391,9 @@ var initialNotes = [
 		date: "2026-04-29",
 		contactType: "Closure",
 		summary: "Clinical case closure",
-		body: "Goals completed. Client has ongoing provider and medication plan."
+		body: "Goals completed. Client has ongoing provider and medication plan.",
+		isSession: true,
+		sessionHours: .75
 	}
 ];
 var initialServices = [
@@ -395,16 +457,27 @@ var formatExactCurrency = (value) => new Intl.NumberFormat("en-US", {
 	style: "currency",
 	currency: "USD"
 }).format(value);
+var formatDate = (value) => dayjs(value).format("MMM D, YYYY");
 function getProgram(programId) {
 	return programs.find((program) => program.id === programId);
 }
 function getStaff(staffId) {
 	return staff.find((person) => person.id === staffId);
 }
+function getAssignedCaseworkers(enrollment) {
+	return enrollment.caseworkers.map((assignment) => ({
+		assignment,
+		staff: getStaff(assignment.staffId)
+	})).filter((item) => item.staff);
+}
+function getPrimaryCaseworker(enrollment) {
+	const primaryAssignment = enrollment.caseworkers.find((assignment) => assignment.isPrimary) ?? enrollment.caseworkers[0];
+	return primaryAssignment ? getStaff(primaryAssignment.staffId) : void 0;
+}
 function visibleCasesForRole(cases, role, staffId) {
 	if (role === "Executive Director") return cases;
 	if (role === "Program Supervisor") return cases.filter((caseRecord) => caseRecord.enrollments.some((enrollment) => enrollment.supervisorId === staffId));
-	return cases.filter((caseRecord) => caseRecord.enrollments.some((enrollment) => enrollment.caseworkerId === staffId));
+	return cases.filter((caseRecord) => caseRecord.enrollments.some((enrollment) => enrollment.caseworkers.some((assignment) => assignment.staffId === staffId)));
 }
 function calculateMetrics(cases, notes, services) {
 	const openCases = cases.filter((caseRecord) => caseRecord.status === "Open");
@@ -485,6 +558,50 @@ function DemoWorkspaceProvider({ children }) {
 			} : enrollment)
 		} : caseRecord));
 	}
+	function addCaseworkerAssignment(caseId, enrollmentId, staffId) {
+		setCases((currentCases) => currentCases.map((caseRecord) => caseRecord.id === caseId ? {
+			...caseRecord,
+			enrollments: caseRecord.enrollments.map((enrollment) => {
+				if (enrollment.id !== enrollmentId || enrollment.caseworkers.some((assignment) => assignment.staffId === staffId)) return enrollment;
+				return {
+					...enrollment,
+					caseworkers: [...enrollment.caseworkers, {
+						staffId,
+						isPrimary: enrollment.caseworkers.length === 0
+					}]
+				};
+			})
+		} : caseRecord));
+	}
+	function removeCaseworkerAssignment(caseId, enrollmentId, staffId) {
+		setCases((currentCases) => currentCases.map((caseRecord) => caseRecord.id === caseId ? {
+			...caseRecord,
+			enrollments: caseRecord.enrollments.map((enrollment) => {
+				if (enrollment.id !== enrollmentId) return enrollment;
+				const remaining = enrollment.caseworkers.filter((assignment) => assignment.staffId !== staffId);
+				const hasPrimary = remaining.some((assignment) => assignment.isPrimary);
+				return {
+					...enrollment,
+					caseworkers: remaining.map((assignment, index) => ({
+						...assignment,
+						isPrimary: hasPrimary ? assignment.isPrimary : index === 0
+					}))
+				};
+			})
+		} : caseRecord));
+	}
+	function setPrimaryCaseworker(caseId, enrollmentId, staffId) {
+		setCases((currentCases) => currentCases.map((caseRecord) => caseRecord.id === caseId ? {
+			...caseRecord,
+			enrollments: caseRecord.enrollments.map((enrollment) => enrollment.id === enrollmentId ? {
+				...enrollment,
+				caseworkers: enrollment.caseworkers.map((assignment) => ({
+					...assignment,
+					isPrimary: assignment.staffId === staffId
+				}))
+			} : enrollment)
+		} : caseRecord));
+	}
 	function updateIntakeField(caseId, field, value) {
 		setCases((currentCases) => currentCases.map((caseRecord) => caseRecord.id === caseId ? {
 			...caseRecord,
@@ -505,12 +622,26 @@ function DemoWorkspaceProvider({ children }) {
 			date: TODAY,
 			contactType: input.contactType,
 			summary: input.summary.trim() || "Case note",
-			body: input.body.trim()
+			body: input.body.trim(),
+			isSession: input.isSession,
+			sessionHours: input.isSession ? input.sessionHours : void 0
 		}, ...currentNotes]);
 		setCases((currentCases) => currentCases.map((caseRecord) => caseRecord.id === caseId ? {
 			...caseRecord,
 			lastContact: TODAY
 		} : caseRecord));
+	}
+	function editNote(noteId, input) {
+		if (!input.enrollmentId || !input.body.trim()) return;
+		setNotes((currentNotes) => currentNotes.map((note) => note.id === noteId ? {
+			...note,
+			enrollmentId: input.enrollmentId,
+			contactType: input.contactType,
+			summary: input.summary.trim() || "Case note",
+			body: input.body.trim(),
+			isSession: input.isSession,
+			sessionHours: input.isSession ? input.sessionHours : void 0
+		} : note));
 	}
 	function addConcreteService(caseId, input) {
 		if (!input.enrollmentId || !input.description.trim() || input.amount <= 0) return;
@@ -540,8 +671,12 @@ function DemoWorkspaceProvider({ children }) {
 		setCurrentStaffId,
 		updateCaseStatus,
 		updateEnrollment,
+		addCaseworkerAssignment,
+		removeCaseworkerAssignment,
+		setPrimaryCaseworker,
 		updateIntakeField,
 		addNote,
+		editNote,
 		addConcreteService
 	}), [
 		cases,
@@ -566,4 +701,4 @@ function useDemoWorkspace() {
 	return context;
 }
 //#endregion
-export { formatExactCurrency as a, programs as c, formatCurrency as i, staff as l, DemoWorkspaceProvider as n, getProgram as o, buildGrantReport as r, getStaff as s, useDemoWorkspace as t };
+export { formatDate as a, getPrimaryCaseworker as c, programs as d, staff as f, formatCurrency as i, getProgram as l, DemoWorkspaceProvider as n, formatExactCurrency as o, buildGrantReport as r, getAssignedCaseworkers as s, useDemoWorkspace as t, getStaff as u };

@@ -1,3 +1,5 @@
+import dayjs from 'dayjs'
+
 export type CaseStatus = 'Open' | 'Pending' | 'Closed'
 export type ProgramStatus =
   | 'Active'
@@ -36,10 +38,15 @@ export type Intake = {
   needs?: string
 }
 
+export type ProgramCaseworkerAssignment = {
+  staffId: string
+  isPrimary: boolean
+}
+
 export type CaseProgramEnrollment = {
   id: string
   programId: string
-  caseworkerId: string
+  caseworkers: ProgramCaseworkerAssignment[]
   supervisorId: string
   status: ProgramStatus
   opened: string
@@ -56,6 +63,8 @@ export type CaseNote = {
   contactType: string
   summary: string
   body: string
+  isSession: boolean
+  sessionHours?: number
 }
 
 export type ConcreteService = {
@@ -149,6 +158,18 @@ export const staff: Staff[] = [
     programs: ['areset-work', 'clinical'],
   },
   {
+    id: 'u-6',
+    name: 'Riley Chen',
+    role: 'Caseworker',
+    programs: ['anf-parents', 'clinical'],
+  },
+  {
+    id: 'u-7',
+    name: 'Taylor Nguyen',
+    role: 'Caseworker',
+    programs: ['areset-work', 'basic-needs'],
+  },
+  {
     id: 'u-4',
     name: 'Priya Nair',
     role: 'Program Supervisor',
@@ -189,7 +210,10 @@ export const initialCases: ClientCase[] = [
       {
         id: 'enr-1',
         programId: 'anf-parents',
-        caseworkerId: 'u-1',
+        caseworkers: [
+          { staffId: 'u-1', isPrimary: true },
+          { staffId: 'u-6', isPrimary: false },
+        ],
         supervisorId: 'u-2',
         status: 'Active',
         opened: '2026-04-02',
@@ -199,7 +223,10 @@ export const initialCases: ClientCase[] = [
       {
         id: 'enr-2',
         programId: 'basic-needs',
-        caseworkerId: 'u-1',
+        caseworkers: [
+          { staffId: 'u-1', isPrimary: true },
+          { staffId: 'u-7', isPrimary: false },
+        ],
         supervisorId: 'u-4',
         status: 'Active',
         opened: '2026-04-04',
@@ -209,7 +236,10 @@ export const initialCases: ClientCase[] = [
       {
         id: 'enr-3',
         programId: 'clinical',
-        caseworkerId: 'u-3',
+        caseworkers: [
+          { staffId: 'u-6', isPrimary: true },
+          { staffId: 'u-3', isPrimary: false },
+        ],
         supervisorId: 'u-2',
         status: 'Pending',
         opened: '2026-06-03',
@@ -259,7 +289,10 @@ export const initialCases: ClientCase[] = [
       {
         id: 'enr-4',
         programId: 'basic-needs',
-        caseworkerId: 'u-1',
+        caseworkers: [
+          { staffId: 'u-1', isPrimary: true },
+          { staffId: 'u-7', isPrimary: false },
+        ],
         supervisorId: 'u-4',
         status: 'Active',
         opened: '2026-05-11',
@@ -304,7 +337,10 @@ export const initialCases: ClientCase[] = [
       {
         id: 'enr-5',
         programId: 'areset-work',
-        caseworkerId: 'u-3',
+        caseworkers: [
+          { staffId: 'u-3', isPrimary: true },
+          { staffId: 'u-7', isPrimary: false },
+        ],
         supervisorId: 'u-4',
         status: 'Active',
         opened: '2026-03-18',
@@ -314,7 +350,10 @@ export const initialCases: ClientCase[] = [
       {
         id: 'enr-6',
         programId: 'basic-needs',
-        caseworkerId: 'u-1',
+        caseworkers: [
+          { staffId: 'u-7', isPrimary: true },
+          { staffId: 'u-1', isPrimary: false },
+        ],
         supervisorId: 'u-4',
         status: 'Active',
         opened: '2026-04-15',
@@ -387,7 +426,10 @@ export const initialCases: ClientCase[] = [
       {
         id: 'enr-7',
         programId: 'clinical',
-        caseworkerId: 'u-3',
+        caseworkers: [
+          { staffId: 'u-3', isPrimary: true },
+          { staffId: 'u-6', isPrimary: false },
+        ],
         supervisorId: 'u-2',
         status: 'Completed',
         opened: '2025-11-03',
@@ -409,6 +451,8 @@ export const initialNotes: CaseNote[] = [
     contactType: 'Home visit',
     summary: 'Parenting group follow-up',
     body: 'Alicia attended the second parenting circle. Discussed child care schedule and summer meals.',
+    isSession: true,
+    sessionHours: 1.25,
   },
   {
     id: 'note-2',
@@ -419,6 +463,7 @@ export const initialNotes: CaseNote[] = [
     contactType: 'Service coordination',
     summary: 'Medication bridge approved',
     body: 'Confirmed pharmacy quote for diabetes medication and routed service request to Basic Needs.',
+    isSession: false,
   },
   {
     id: 'note-3',
@@ -429,6 +474,8 @@ export const initialNotes: CaseNote[] = [
     contactType: 'Phone',
     summary: 'CDL class start date',
     body: 'Marcus confirmed CDL class begins June 17. Needs boots and state testing fee by June 14.',
+    isSession: true,
+    sessionHours: 0.5,
   },
   {
     id: 'note-4',
@@ -439,6 +486,8 @@ export const initialNotes: CaseNote[] = [
     contactType: 'Closure',
     summary: 'Clinical case closure',
     body: 'Goals completed. Client has ongoing provider and medication plan.',
+    isSession: true,
+    sessionHours: 0.75,
   },
 ]
 
@@ -508,12 +557,34 @@ export const formatExactCurrency = (value: number) =>
     currency: 'USD',
   }).format(value)
 
+export const formatDate = (value: string) => dayjs(value).format('MMM D, YYYY')
+
+export const formatDateTime = (value: string) =>
+  dayjs(value).format('MMM D, YYYY h:mm A')
+
 export function getProgram(programId: string) {
   return programs.find((program) => program.id === programId)
 }
 
 export function getStaff(staffId: string) {
   return staff.find((person) => person.id === staffId)
+}
+
+export function getAssignedCaseworkers(enrollment: CaseProgramEnrollment) {
+  return enrollment.caseworkers
+    .map((assignment) => ({
+      assignment,
+      staff: getStaff(assignment.staffId),
+    }))
+    .filter((item) => item.staff)
+}
+
+export function getPrimaryCaseworker(enrollment: CaseProgramEnrollment) {
+  const primaryAssignment =
+    enrollment.caseworkers.find((assignment) => assignment.isPrimary) ??
+    enrollment.caseworkers[0]
+
+  return primaryAssignment ? getStaff(primaryAssignment.staffId) : undefined
 }
 
 export function visibleCasesForRole(
@@ -533,7 +604,10 @@ export function visibleCasesForRole(
 
   return cases.filter((caseRecord) =>
     caseRecord.enrollments.some(
-      (enrollment) => enrollment.caseworkerId === staffId,
+      (enrollment) =>
+        enrollment.caseworkers.some(
+          (assignment) => assignment.staffId === staffId,
+        ),
     ),
   )
 }

@@ -1,5 +1,5 @@
-import { c as programs, o as getProgram, s as getStaff, t as useDemoWorkspace } from "./useDemoWorkspace-BjowWMof.js";
-import { a as ProgramStatusBadge, i as ProgramBadge, n as EmptyState, o as RiskBadge, t as CaseStatusBadge } from "./CaseworkUI-CJDE9kkn.js";
+import { a as formatDate, d as programs, l as getProgram, t as useDemoWorkspace } from "./useDemoWorkspace-xnVl1622.js";
+import { i as ProgramBadge, n as EmptyState, o as RiskBadge, t as CaseStatusBadge } from "./CaseworkUI-CJDE9kkn.js";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
@@ -100,7 +100,7 @@ function CasesIndex() {
 				gap: "sm",
 				children: [
 					/* @__PURE__ */ jsx(TextInput, {
-						className: "min-w-[240px] flex-1",
+						className: "min-w-60 flex-1",
 						leftSection: /* @__PURE__ */ jsx(Search, { size: 16 }),
 						label: "Search",
 						placeholder: "Name, case ID, county",
@@ -128,7 +128,7 @@ function CasesIndex() {
 					}) : null
 				]
 			}), pageCases.length > 0 ? /* @__PURE__ */ jsxs(Fragment, { children: [/* @__PURE__ */ jsx(Table.ScrollContainer, {
-				minWidth: 920,
+				minWidth: 780,
 				mt: "md",
 				children: /* @__PURE__ */ jsxs(Table, {
 					highlightOnHover: true,
@@ -137,7 +137,6 @@ function CasesIndex() {
 						/* @__PURE__ */ jsx(Table.Th, { children: "Client" }),
 						/* @__PURE__ */ jsx(Table.Th, { children: "Status" }),
 						/* @__PURE__ */ jsx(Table.Th, { children: "Programs" }),
-						/* @__PURE__ */ jsx(Table.Th, { children: "Assigned staff" }),
 						/* @__PURE__ */ jsx(Table.Th, { children: "Last contact" }),
 						/* @__PURE__ */ jsx(Table.Th, { children: "Risk" })
 					] }) }), /* @__PURE__ */ jsx(Table.Tbody, { children: pageCases.map((caseRecord) => /* @__PURE__ */ jsxs(Table.Tr, {
@@ -166,7 +165,8 @@ function CasesIndex() {
 								size: "sm",
 								children: [
 									caseRecord.id,
-									" - ",
+									" -",
+									" ",
 									caseRecord.county,
 									" County"
 								]
@@ -182,17 +182,7 @@ function CasesIndex() {
 									children: "None"
 								})
 							}) }),
-							/* @__PURE__ */ jsx(Table.Td, { children: /* @__PURE__ */ jsx(Stack, {
-								gap: 4,
-								children: caseRecord.enrollments.slice(0, 2).map((enrollment) => /* @__PURE__ */ jsxs(Group, {
-									gap: 6,
-									children: [/* @__PURE__ */ jsx(ProgramStatusBadge, { status: enrollment.status }), /* @__PURE__ */ jsx(Text, {
-										size: "sm",
-										children: getStaff(enrollment.caseworkerId)?.name
-									})]
-								}, enrollment.id))
-							}) }),
-							/* @__PURE__ */ jsx(Table.Td, { children: caseRecord.lastContact }),
+							/* @__PURE__ */ jsx(Table.Td, { children: formatDate(caseRecord.lastContact) }),
 							/* @__PURE__ */ jsx(Table.Td, { children: /* @__PURE__ */ jsx(RiskBadge, { risk: caseRecord.risk }) })
 						]
 					}, caseRecord.id)) })]
@@ -225,7 +215,7 @@ function CasesIndex() {
 	});
 }
 //#endregion
-//#region src/routes/cases.tsx?tsr-split=component
+//#region src/routes/cases/index.tsx?tsr-split=component
 var SplitComponent = CasesIndex;
 //#endregion
 export { SplitComponent as component };

@@ -13,13 +13,16 @@ import { useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { CaseStatus } from "~/domain/demo-data";
-import { getProgram, getStaff, programs } from "~/domain/demo-data";
+import {
+	formatDate,
+	getProgram,
+	programs,
+} from "~/domain/demo-data";
 import { useDemoWorkspace } from "~/hooks/useDemoWorkspace";
 import {
 	CaseStatusBadge,
 	EmptyState,
 	ProgramBadge,
-	ProgramStatusBadge,
 	RiskBadge,
 } from "./CaseworkUI";
 
@@ -164,14 +167,13 @@ export function CasesIndex() {
 
 				{pageCases.length > 0 ? (
 					<>
-						<Table.ScrollContainer minWidth={920} mt='md'>
+						<Table.ScrollContainer minWidth={780} mt='md'>
 							<Table highlightOnHover verticalSpacing='sm'>
 								<Table.Thead>
 									<Table.Tr>
 										<Table.Th>Client</Table.Th>
 										<Table.Th>Status</Table.Th>
 										<Table.Th>Programs</Table.Th>
-										<Table.Th>Assigned staff</Table.Th>
 										<Table.Th>Last contact</Table.Th>
 										<Table.Th>Risk</Table.Th>
 									</Table.Tr>
@@ -253,34 +255,9 @@ export function CasesIndex() {
 												</Group>
 											</Table.Td>
 											<Table.Td>
-												<Stack gap={4}>
-													{caseRecord.enrollments
-														.slice(0, 2)
-														.map((enrollment) => (
-															<Group
-																gap={6}
-																key={
-																	enrollment.id
-																}
-															>
-																<ProgramStatusBadge
-																	status={
-																		enrollment.status
-																	}
-																/>
-																<Text size='sm'>
-																	{
-																		getStaff(
-																			enrollment.caseworkerId,
-																		)?.name
-																	}
-																</Text>
-															</Group>
-														))}
-												</Stack>
-											</Table.Td>
-											<Table.Td>
-												{caseRecord.lastContact}
+												{formatDate(
+													caseRecord.lastContact,
+												)}
 											</Table.Td>
 											<Table.Td>
 												<RiskBadge

@@ -1,35 +1,36 @@
 {
-  "name": "frc-caseworks",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "vite dev --host 127.0.0.1",
-    "build": "vite build",
-    "typecheck": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
-  },
-  "dependencies": {
-    "@mantine/core": "latest",
-    "@mantine/hooks": "latest",
-    "@tanstack/react-router": "latest",
-    "@tanstack/react-start": "latest",
-    "drizzle-orm": "latest",
-    "lucide-react": "latest",
-    "mysql2": "latest",
-    "react": "latest",
-    "react-dom": "latest"
-  },
-  "devDependencies": {
-    "@tailwindcss/vite": "latest",
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "@vitejs/plugin-react": "latest",
-    "drizzle-kit": "latest",
-    "tailwindcss": "latest",
-    "typescript": "latest",
-    "vite": "latest",
-    "vite-tsconfig-paths": "latest"
-  }
+	"name": "frc-caseworks",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev --port 3000 --host",
+		"build": "vite build",
+		"typecheck": "tsc --noEmit",
+		"db:generate": "drizzle-kit generate",
+		"db:push": "drizzle-kit push"
+	},
+	"dependencies": {
+		"@mantine/core": "latest",
+		"@mantine/hooks": "latest",
+		"@tanstack/react-router": "latest",
+		"@tanstack/react-start": "latest",
+		"dayjs": "^1.11.21",
+		"drizzle-orm": "latest",
+		"lucide-react": "latest",
+		"mysql2": "latest",
+		"react": "latest",
+		"react-dom": "latest"
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "latest",
+		"@types/node": "latest",
+		"@types/react": "latest",
+		"@types/react-dom": "latest",
+		"@vitejs/plugin-react": "latest",
+		"drizzle-kit": "latest",
+		"tailwindcss": "latest",
+		"typescript": "latest",
+		"vite": "latest",
+		"vite-tsconfig-paths": "latest"
+	}
 }

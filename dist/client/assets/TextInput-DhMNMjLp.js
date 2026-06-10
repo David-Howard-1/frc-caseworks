@@ -1,1 +1,0 @@
-import{R as e,j as t,vt as n}from"./useDemoWorkspace-D9UmQCXb.js";import{o as r}from"./index-DWDC92WD.js";function i(e,t){return typeof e==`boolean`?e:t.autoContrast}var a=n(),o=t(t=>(0,a.jsx)(r,{component:`input`,...e([`Input`,`InputWrapper`,`TextInput`],null,t),__staticSelector:`TextInput`}));o.classes=r.classes,o.displayName=`@mantine/core/TextInput`;export{i as n,o as t};

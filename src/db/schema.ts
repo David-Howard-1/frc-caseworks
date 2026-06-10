@@ -185,9 +185,6 @@ export const caseProgramEnrollments = mysqlTable(
     programId: int('program_id')
       .notNull()
       .references(() => programs.id),
-    assignedCaseworkerId: int('assigned_caseworker_id').references(
-      () => users.id,
-    ),
     supervisorId: int('supervisor_id').references(() => users.id),
     status: programEnrollmentStatusEnum.default('pending').notNull(),
     startDate: date('start_date'),
@@ -201,10 +198,32 @@ export const caseProgramEnrollments = mysqlTable(
       table.caseId,
       table.programId,
     ),
-    caseworkerIdx: index('case_program_enrollments_caseworker_idx').on(
-      table.assignedCaseworkerId,
-      table.status,
+  }),
+)
+
+export const caseProgramCaseworkers = mysqlTable(
+  'case_program_caseworkers',
+  {
+    programEnrollmentId: int('program_enrollment_id')
+      .notNull()
+      .references(() => caseProgramEnrollments.id),
+    caseworkerId: int('caseworker_id')
+      .notNull()
+      .references(() => users.id),
+    isPrimary: boolean('is_primary').default(false).notNull(),
+    assignedAt: timestamp('assigned_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({
+      columns: [table.programEnrollmentId, table.caseworkerId],
+    }),
+    caseworkerIdx: index('case_program_caseworkers_caseworker_idx').on(
+      table.caseworkerId,
+      table.isPrimary,
     ),
+    enrollmentPrimaryIdx: index(
+      'case_program_caseworkers_enrollment_primary_idx',
+    ).on(table.programEnrollmentId, table.isPrimary),
   }),
 )
 
@@ -225,6 +244,12 @@ export const caseNotes = mysqlTable(
     contactType: varchar('contact_type', { length: 80 }),
     summary: varchar('summary', { length: 191 }),
     body: text('body').notNull(),
+    isSession: boolean('is_session').default(true).notNull(),
+    sessionHours: decimal('session_hours', {
+      precision: 5,
+      scale: 2,
+      mode: 'number',
+    }),
     isPrivate: boolean('is_private').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
@@ -336,8 +361,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [frcs.id],
   }),
   supervisedPrograms: many(programs, { relationName: 'programSupervisor' }),
-  caseworkerAssignments: many(caseProgramEnrollments, {
-    relationName: 'enrollmentCaseworker',
+  caseworkerAssignments: many(caseProgramCaseworkers, {
+    relationName: 'caseProgramCaseworkerUser',
   }),
   supervisorAssignments: many(caseProgramEnrollments, {
     relationName: 'enrollmentSupervisor',
@@ -392,17 +417,28 @@ export const caseProgramEnrollmentsRelations = relations(
       fields: [caseProgramEnrollments.programId],
       references: [programs.id],
     }),
-    caseworker: one(users, {
-      fields: [caseProgramEnrollments.assignedCaseworkerId],
-      references: [users.id],
-      relationName: 'enrollmentCaseworker',
-    }),
     supervisor: one(users, {
       fields: [caseProgramEnrollments.supervisorId],
       references: [users.id],
       relationName: 'enrollmentSupervisor',
     }),
+    assignedCaseworkers: many(caseProgramCaseworkers),
     notes: many(caseNotes),
     concreteServices: many(concreteServices),
+  }),
+)
+
+export const caseProgramCaseworkersRelations = relations(
+  caseProgramCaseworkers,
+  ({ one }) => ({
+    programEnrollment: one(caseProgramEnrollments, {
+      fields: [caseProgramCaseworkers.programEnrollmentId],
+      references: [caseProgramEnrollments.id],
+    }),
+    caseworker: one(users, {
+      fields: [caseProgramCaseworkers.caseworkerId],
+      references: [users.id],
+      relationName: 'caseProgramCaseworkerUser',
+    }),
   }),
 )

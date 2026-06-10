@@ -31,7 +31,11 @@ export type AddNoteInput = {
   contactType: string
   summary: string
   body: string
+  isSession: boolean
+  sessionHours?: number
 }
+
+export type EditNoteInput = AddNoteInput
 
 export type AddServiceInput = {
   enrollmentId: string
@@ -57,12 +61,28 @@ export type DemoWorkspaceContextValue = {
     enrollmentId: string,
     patch: Partial<CaseProgramEnrollment>,
   ) => void
+  addCaseworkerAssignment: (
+    caseId: string,
+    enrollmentId: string,
+    staffId: string,
+  ) => void
+  removeCaseworkerAssignment: (
+    caseId: string,
+    enrollmentId: string,
+    staffId: string,
+  ) => void
+  setPrimaryCaseworker: (
+    caseId: string,
+    enrollmentId: string,
+    staffId: string,
+  ) => void
   updateIntakeField: (
     caseId: string,
     field: keyof Intake,
     value: string,
   ) => void
   addNote: (caseId: string, input: AddNoteInput) => void
+  editNote: (noteId: string, input: EditNoteInput) => void
   addConcreteService: (caseId: string, input: AddServiceInput) => void
 }
 
@@ -152,6 +172,108 @@ export function DemoWorkspaceProvider({
     )
   }
 
+  function addCaseworkerAssignment(
+    caseId: string,
+    enrollmentId: string,
+    staffId: string,
+  ) {
+    setCases((currentCases) =>
+      currentCases.map((caseRecord) =>
+        caseRecord.id === caseId
+          ? {
+              ...caseRecord,
+              enrollments: caseRecord.enrollments.map((enrollment) => {
+                if (
+                  enrollment.id !== enrollmentId ||
+                  enrollment.caseworkers.some(
+                    (assignment) => assignment.staffId === staffId,
+                  )
+                ) {
+                  return enrollment
+                }
+
+                return {
+                  ...enrollment,
+                  caseworkers: [
+                    ...enrollment.caseworkers,
+                    {
+                      staffId,
+                      isPrimary: enrollment.caseworkers.length === 0,
+                    },
+                  ],
+                }
+              }),
+            }
+          : caseRecord,
+      ),
+    )
+  }
+
+  function removeCaseworkerAssignment(
+    caseId: string,
+    enrollmentId: string,
+    staffId: string,
+  ) {
+    setCases((currentCases) =>
+      currentCases.map((caseRecord) =>
+        caseRecord.id === caseId
+          ? {
+              ...caseRecord,
+              enrollments: caseRecord.enrollments.map((enrollment) => {
+                if (enrollment.id !== enrollmentId) {
+                  return enrollment
+                }
+
+                const remaining = enrollment.caseworkers.filter(
+                  (assignment) => assignment.staffId !== staffId,
+                )
+                const hasPrimary = remaining.some(
+                  (assignment) => assignment.isPrimary,
+                )
+
+                return {
+                  ...enrollment,
+                  caseworkers: remaining.map((assignment, index) => ({
+                    ...assignment,
+                    isPrimary: hasPrimary
+                      ? assignment.isPrimary
+                      : index === 0,
+                  })),
+                }
+              }),
+            }
+          : caseRecord,
+      ),
+    )
+  }
+
+  function setPrimaryCaseworker(
+    caseId: string,
+    enrollmentId: string,
+    staffId: string,
+  ) {
+    setCases((currentCases) =>
+      currentCases.map((caseRecord) =>
+        caseRecord.id === caseId
+          ? {
+              ...caseRecord,
+              enrollments: caseRecord.enrollments.map((enrollment) =>
+                enrollment.id === enrollmentId
+                  ? {
+                      ...enrollment,
+                      caseworkers: enrollment.caseworkers.map((assignment) => ({
+                        ...assignment,
+                        isPrimary: assignment.staffId === staffId,
+                      })),
+                    }
+                  : enrollment,
+              ),
+            }
+          : caseRecord,
+      ),
+    )
+  }
+
   function updateIntakeField(
     caseId: string,
     field: keyof Intake,
@@ -188,6 +310,8 @@ export function DemoWorkspaceProvider({
         contactType: input.contactType,
         summary: input.summary.trim() || 'Case note',
         body: input.body.trim(),
+        isSession: input.isSession,
+        sessionHours: input.isSession ? input.sessionHours : undefined,
       },
       ...currentNotes,
     ])
@@ -196,6 +320,28 @@ export function DemoWorkspaceProvider({
         caseRecord.id === caseId
           ? { ...caseRecord, lastContact: TODAY }
           : caseRecord,
+      ),
+    )
+  }
+
+  function editNote(noteId: string, input: EditNoteInput) {
+    if (!input.enrollmentId || !input.body.trim()) {
+      return
+    }
+
+    setNotes((currentNotes) =>
+      currentNotes.map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              enrollmentId: input.enrollmentId,
+              contactType: input.contactType,
+              summary: input.summary.trim() || 'Case note',
+              body: input.body.trim(),
+              isSession: input.isSession,
+              sessionHours: input.isSession ? input.sessionHours : undefined,
+            }
+          : note,
       ),
     )
   }
@@ -240,8 +386,12 @@ export function DemoWorkspaceProvider({
       setCurrentStaffId,
       updateCaseStatus,
       updateEnrollment,
+      addCaseworkerAssignment,
+      removeCaseworkerAssignment,
+      setPrimaryCaseworker,
       updateIntakeField,
       addNote,
+      editNote,
       addConcreteService,
     }),
     [

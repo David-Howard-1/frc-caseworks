@@ -1,4 +1,4 @@
-import { c as programs, i as formatCurrency, o as getProgram, t as useDemoWorkspace } from "./useDemoWorkspace-BjowWMof.js";
+import { a as formatDate, d as programs, i as formatCurrency, l as getProgram, t as useDemoWorkspace } from "./useDemoWorkspace-xnVl1622.js";
 import { i as ProgramBadge, r as MetricTile, t as CaseStatusBadge } from "./CaseworkUI-CJDE9kkn.js";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { Box, Group, SimpleGrid, Stack, Table, Text, Title } from "@mantine/core";
@@ -157,7 +157,7 @@ function DashboardOverview() {
 							const enrollment = visibleCases.find((item) => item.id === service.caseId)?.enrollments.find((item) => item.id === service.enrollmentId);
 							const program = enrollment ? getProgram(enrollment.programId) : void 0;
 							return /* @__PURE__ */ jsxs(Table.Tr, { children: [
-								/* @__PURE__ */ jsx(Table.Td, { children: service.date }),
+								/* @__PURE__ */ jsx(Table.Td, { children: formatDate(service.date) }),
 								/* @__PURE__ */ jsx(Table.Td, { children: /* @__PURE__ */ jsx(ProgramBadge, { program }) }),
 								/* @__PURE__ */ jsx(Table.Td, { children: service.description }),
 								/* @__PURE__ */ jsx(Table.Td, {

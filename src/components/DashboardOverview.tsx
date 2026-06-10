@@ -6,6 +6,7 @@ import {
   DollarSign,
 } from 'lucide-react'
 import {
+  formatDate,
   formatCurrency,
   getProgram,
   programs,
@@ -166,7 +167,7 @@ export function DashboardOverview() {
 
                 return (
                   <Table.Tr key={service.id}>
-                    <Table.Td>{service.date}</Table.Td>
+                    <Table.Td>{formatDate(service.date)}</Table.Td>
                     <Table.Td>
                       <ProgramBadge program={program} />
                     </Table.Td>
