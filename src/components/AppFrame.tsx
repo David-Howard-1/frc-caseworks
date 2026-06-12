@@ -15,6 +15,7 @@ import {
   BriefcaseBusiness,
   FileChartColumn,
   HeartHandshake,
+  ClipboardList,
   LayoutDashboard,
   Plus,
 } from 'lucide-react'
@@ -31,12 +32,19 @@ const navigation: Array<{
   label: string
   to: '/cases'
   icon: LucideIcon
-} | {
+} 
+// | {
+//   label: string
+//   to: '/intake'
+//   icon: LucideIcon
+// } 
+| {
   label: string
   to: '/reports'
   icon: LucideIcon
 }> = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard },
+  // { label: 'Intake', to: '/intake', icon: ClipboardList },
   { label: 'Cases', to: '/cases', icon: BriefcaseBusiness },
   { label: 'Reports', to: '/reports', icon: FileChartColumn },
 ]
@@ -74,7 +82,12 @@ export function AppFrame({ children }: Readonly<{ children: ReactNode }>) {
               </Text>
             </Box>
           </Group>
-          <Button leftSection={<Plus size={17} />} radius={6}>
+          <Button
+            component={Link}
+            leftSection={<Plus size={17} />}
+            radius={6}
+            to="/intake"
+          >
             New intake
           </Button>
         </Group>
@@ -144,7 +157,7 @@ function NavItem({
   active: boolean
   icon: LucideIcon
   label: string
-  to: '/' | '/cases' | '/reports'
+  to: '/' | '/intake' | '/cases' | '/reports'
 }) {
   return (
     <Link

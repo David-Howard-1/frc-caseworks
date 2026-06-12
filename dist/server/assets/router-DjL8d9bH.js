@@ -1,15 +1,20 @@
-import { n as DemoWorkspaceProvider, t as useDemoWorkspace } from "./useDemoWorkspace-xnVl1622.js";
-import { t as Route$5 } from "./_caseId-DkNVV6vA.js";
+import { n as DemoWorkspaceProvider, t as useDemoWorkspace } from "./useDemoWorkspace-hb7yBQ3W.js";
+import { t as Route$6 } from "./_caseId-C9BMBjTg.js";
 import { HeadContent, Link, Outlet, Scripts, createFileRoute, createRootRoute, createRouter, lazyRouteComponent, useRouterState } from "@tanstack/react-router";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { AppShell, Box, Button, ColorSchemeScript, Group, MantineProvider, SegmentedControl, Select, Stack, Text, ThemeIcon, Title, createTheme } from "@mantine/core";
-import { BriefcaseBusiness, FileChartColumn, HeartHandshake, LayoutDashboard, Plus } from "lucide-react";
+import { BriefcaseBusiness, ClipboardList, FileChartColumn, HeartHandshake, LayoutDashboard, Plus } from "lucide-react";
 //#region src/components/AppFrame.tsx
 var navigation = [
 	{
 		label: "Dashboard",
 		to: "/",
 		icon: LayoutDashboard
+	},
+	{
+		label: "Intake",
+		to: "/intake",
+		icon: ClipboardList
 	},
 	{
 		label: "Cases",
@@ -59,8 +64,10 @@ function AppFrame({ children }) {
 							})]
 						})]
 					}), /* @__PURE__ */ jsx(Button, {
+						component: Link,
 						leftSection: /* @__PURE__ */ jsx(Plus, { size: 17 }),
 						radius: 6,
+						to: "/intake",
 						children: "New intake"
 					})]
 				})
@@ -151,7 +158,7 @@ var theme = createTheme({
 	fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
 	headings: { fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif" }
 });
-var Route$4 = createRootRoute({
+var Route$5 = createRootRoute({
 	head: () => ({ meta: [
 		{ charSet: "utf-8" },
 		{
@@ -180,36 +187,45 @@ function RootDocument({ children }) {
 }
 //#endregion
 //#region src/routes/reports.tsx
-var $$splitComponentImporter$3 = () => import("./reports-JLdfXd35.js");
-var Route$3 = createFileRoute("/reports")({ component: lazyRouteComponent($$splitComponentImporter$3, "component") });
+var $$splitComponentImporter$4 = () => import("./reports-DFT6YUJ0.js");
+var Route$4 = createFileRoute("/reports")({ component: lazyRouteComponent($$splitComponentImporter$4, "component") });
+//#endregion
+//#region src/routes/intake.tsx
+var $$splitComponentImporter$3 = () => import("./intake-D9V-XzlQ.js");
+var Route$3 = createFileRoute("/intake")({ component: lazyRouteComponent($$splitComponentImporter$3, "component") });
 //#endregion
 //#region src/routes/cases/route.tsx
 var $$splitComponentImporter$2 = () => import("./route-BoHY-RXt.js");
 var Route$2 = createFileRoute("/cases")({ component: lazyRouteComponent($$splitComponentImporter$2, "component") });
 //#endregion
 //#region src/routes/index.tsx
-var $$splitComponentImporter$1 = () => import("./routes-Chfg7RbX.js");
+var $$splitComponentImporter$1 = () => import("./routes-CU19nta4.js");
 var Route$1 = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
 //#endregion
 //#region src/routes/cases/index.tsx
-var $$splitComponentImporter = () => import("./cases-UVBbZUMz.js");
+var $$splitComponentImporter = () => import("./cases-CxNPOo-Z.js");
 var Route = createFileRoute("/cases/")({ component: lazyRouteComponent($$splitComponentImporter, "component") });
 //#endregion
 //#region src/routeTree.gen.ts
-var ReportsRoute = Route$3.update({
+var ReportsRoute = Route$4.update({
 	id: "/reports",
 	path: "/reports",
-	getParentRoute: () => Route$4
+	getParentRoute: () => Route$5
+});
+var IntakeRoute = Route$3.update({
+	id: "/intake",
+	path: "/intake",
+	getParentRoute: () => Route$5
 });
 var CasesRouteRoute = Route$2.update({
 	id: "/cases",
 	path: "/cases",
-	getParentRoute: () => Route$4
+	getParentRoute: () => Route$5
 });
 var IndexRoute = Route$1.update({
 	id: "/",
 	path: "/",
-	getParentRoute: () => Route$4
+	getParentRoute: () => Route$5
 });
 var CasesIndexRoute = Route.update({
 	id: "/",
@@ -217,7 +233,7 @@ var CasesIndexRoute = Route.update({
 	getParentRoute: () => CasesRouteRoute
 });
 var CasesRouteRouteChildren = {
-	CasesCaseIdRoute: Route$5.update({
+	CasesCaseIdRoute: Route$6.update({
 		id: "/$caseId",
 		path: "/$caseId",
 		getParentRoute: () => CasesRouteRoute
@@ -227,9 +243,10 @@ var CasesRouteRouteChildren = {
 var rootRouteChildren = {
 	IndexRoute,
 	CasesRouteRoute: CasesRouteRoute._addFileChildren(CasesRouteRouteChildren),
+	IntakeRoute,
 	ReportsRoute
 };
-var routeTree = Route$4._addFileChildren(rootRouteChildren)._addFileTypes();
+var routeTree = Route$5._addFileChildren(rootRouteChildren)._addFileTypes();
 //#endregion
 //#region src/router.tsx
 function getRouter() {

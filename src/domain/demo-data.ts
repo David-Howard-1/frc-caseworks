@@ -38,6 +38,119 @@ export type Intake = {
   needs?: string
 }
 
+export type IntakeStatus =
+  | 'Draft'
+  | 'Duplicate Review'
+  | 'Rejected'
+  | 'Converted to Case'
+
+export type IntakeIncomeSource = {
+  id: string
+  type: string
+  sourceName: string
+  amount: string
+  frequency: string
+  notes?: string
+}
+
+export type IntakeBenefit = {
+  id: string
+  type: string
+  isReceiving: boolean
+  monthlyAmount?: string
+  caseNumber?: string
+  agency?: string
+  notes?: string
+}
+
+export type IntakeContact = {
+  id: string
+  name: string
+  relationship: string
+  organization?: string
+  role?: string
+  phone?: string
+  email?: string
+  permissionToContact: boolean
+  notes?: string
+}
+
+export type IntakeSubmission = {
+  id: string
+  status: IntakeStatus
+  createdById: string
+  convertedById?: string
+  caseId?: string
+  startedAt: string
+  savedAt?: string
+  duplicateWarnings: string[]
+  duplicateOverrideReason?: string
+  client: {
+    firstName: string
+    middleName?: string
+    lastName: string
+    preferredName?: string
+    dateOfBirth?: string
+    approximateAge?: string
+    phone?: string
+    alternatePhone?: string
+    email?: string
+    preferredContactMethod?: string
+    safeToCall: boolean
+    safeToText: boolean
+    safeToEmail: boolean
+    contactRestrictions?: string
+  }
+  demographics: {
+    gender?: string
+    race?: string
+    ethnicity?: string
+    primaryLanguage?: string
+    interpreterNeeded: boolean
+    veteranStatus?: string
+    disabilityStatus?: string
+    householdSize?: string
+    dependents?: string
+    maritalStatus?: string
+  }
+  address: {
+    line1?: string
+    line2?: string
+    city?: string
+    state?: string
+    postalCode?: string
+    county?: string
+  }
+  incomeSources: IntakeIncomeSource[]
+  benefits: IntakeBenefit[]
+  relevantContacts: IntakeContact[]
+  legal: {
+    hasCourtInvolvement: boolean
+    matterType?: string
+    courtName?: string
+    county?: string
+    caseNumber?: string
+    judge?: string
+    attorney?: string
+    officer?: string
+    nextCourtDate?: string
+    courtTime?: string
+    legalStatus?: string
+    warrantsKnown: boolean
+    notes?: string
+  }
+  housing: {
+    status: string
+    currentLocation?: string
+    lengthOfStay?: string
+    safeHousing: boolean
+    atRisk: boolean
+    evictionPending: boolean
+    livingWithFamily: boolean
+    notes?: string
+  }
+}
+
 export type ProgramCaseworkerAssignment = {
   staffId: string
   isPrimary: boolean

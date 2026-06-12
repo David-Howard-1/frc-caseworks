@@ -517,9 +517,12 @@ var roleDefaults = {
 	"Program Supervisor": "u-2",
 	"Executive Director": "u-5"
 };
+var normalize = (value) => value?.trim().toLowerCase() ?? "";
+var normalizePhone = (value) => value?.replace(/\D/g, "") ?? "";
 var DemoWorkspaceContext = createContext(null);
 function DemoWorkspaceProvider({ children }) {
 	const [cases, setCases] = useState(initialCases);
+	const [intakeSubmissions, setIntakeSubmissions] = useState([]);
 	const [notes, setNotes] = useState(initialNotes);
 	const [services, setServices] = useState(initialServices);
 	const [role, setRole] = useState("Caseworker");
@@ -612,6 +615,107 @@ function DemoWorkspaceProvider({ children }) {
 			lastContact: TODAY
 		} : caseRecord));
 	}
+	function findIntakeMatches(input) {
+		const firstName = normalize(input.firstName);
+		const lastName = normalize(input.lastName);
+		const phone = normalizePhone(input.phone);
+		const email = normalize(input.email);
+		if (!firstName && !lastName && !phone && !email && !input.dateOfBirth) return [];
+		const caseMatches = cases.reduce((matches, caseRecord) => {
+			const [caseFirstName = "", ...rest] = caseRecord.displayName.split(" ");
+			const caseLastName = rest.at(-1) ?? "";
+			const intake = caseRecord.intake;
+			const nameScore = firstName && normalize(caseFirstName).startsWith(firstName) || lastName && normalize(caseLastName).startsWith(lastName);
+			const exactContact = phone && normalizePhone(intake.phone) === phone || email && normalize(intake.email) === email;
+			if (!nameScore && !exactContact) return matches;
+			const strength = exactContact ? "High confidence" : firstName && lastName && nameScore ? "Medium confidence" : "Low confidence";
+			const firstEnrollment = caseRecord.enrollments[0];
+			const program = firstEnrollment ? getProgram(firstEnrollment.programId) : void 0;
+			const primaryStaffId = firstEnrollment?.caseworkers.find((assignment) => assignment.isPrimary)?.staffId;
+			matches.push({
+				id: caseRecord.id,
+				recordType: "Case",
+				clientName: caseRecord.displayName,
+				phone: intake.phone,
+				email: intake.email,
+				caseStatus: caseRecord.status,
+				programArea: program?.name ?? "No program assigned",
+				lastUpdated: caseRecord.lastContact,
+				assignedStaff: primaryStaffId ? staff.find((person) => person.id === primaryStaffId)?.name : void 0,
+				strength
+			});
+			return matches;
+		}, []);
+		const intakeMatches = intakeSubmissions.filter((submission) => submission.status !== "Converted to Case").reduce((matches, submission) => {
+			const exactContact = phone && normalizePhone(submission.client.phone) === phone || email && normalize(submission.client.email) === email;
+			if (!(firstName && normalize(submission.client.firstName).startsWith(firstName) || lastName && normalize(submission.client.lastName).startsWith(lastName)) && !exactContact) return matches;
+			matches.push({
+				id: submission.id,
+				recordType: "Intake",
+				clientName: `${submission.client.firstName} ${submission.client.lastName}`,
+				dateOfBirth: submission.client.dateOfBirth,
+				phone: submission.client.phone,
+				email: submission.client.email,
+				programArea: "Draft intake",
+				lastUpdated: submission.savedAt ?? submission.startedAt,
+				assignedStaff: staff.find((person) => person.id === submission.createdById)?.name,
+				strength: exactContact ? "High confidence" : "Medium confidence"
+			});
+			return matches;
+		}, []);
+		return [...caseMatches, ...intakeMatches];
+	}
+	function createCaseFromIntake(input) {
+		const newCaseId = `case-${Date.now()}`;
+		const displayName = `${input.client.firstName.trim()} ${input.client.lastName.trim()}`;
+		const age = Number(input.client.approximateAge) || 0;
+		const hasHighDuplicate = input.duplicateWarnings.some((warning) => warning.includes("High confidence"));
+		const caseRecord = {
+			id: newCaseId,
+			personId: `person-${Date.now()}`,
+			displayName,
+			pronouns: void 0,
+			age,
+			status: "Open",
+			opened: input.savedAt?.slice(0, 10) ?? TODAY,
+			lastContact: input.savedAt?.slice(0, 10) ?? TODAY,
+			risk: hasHighDuplicate ? "Medium" : "Low",
+			county: input.address.county || input.housing.currentLocation || "Unknown",
+			intake: {
+				intakeDate: input.savedAt?.slice(0, 10) ?? TODAY,
+				referralSource: "New intake workflow",
+				county: input.address.county,
+				phone: input.client.phone,
+				email: input.client.email,
+				householdIncome: input.incomeSources.map((source) => `${source.type}: ${source.amount} ${source.frequency}`).join("; "),
+				housing: input.housing.status,
+				strengths: input.demographics.primaryLanguage ? `Primary language: ${input.demographics.primaryLanguage}` : void 0,
+				needs: [
+					input.legal.hasCourtInvolvement ? `Legal: ${input.legal.matterType || "court involvement"}` : void 0,
+					input.benefits.length > 0 ? `Benefits: ${input.benefits.map((benefit) => benefit.type).join(", ")}` : void 0,
+					input.housing.notes
+				].filter(Boolean).join("; ")
+			},
+			enrollments: [],
+			relatedPeople: input.relevantContacts.map((contact) => ({
+				id: contact.id,
+				name: contact.name,
+				relationship: contact.relationship,
+				age: 0,
+				inHousehold: false
+			}))
+		};
+		setCases((currentCases) => [caseRecord, ...currentCases]);
+		setIntakeSubmissions((currentSubmissions) => [{
+			...input,
+			id: `intake-${Date.now()}`,
+			status: "Converted to Case",
+			caseId: newCaseId,
+			convertedById: currentStaffId,
+			savedAt: `${TODAY}T10:30:00`
+		}, ...currentSubmissions]);
+		return newCaseId;
+	}
 	function addNote(caseId, input) {
 		if (!input.enrollmentId || !input.body.trim()) return;
 		setNotes((currentNotes) => [{
@@ -666,6 +770,7 @@ function DemoWorkspaceProvider({ children }) {
 		currentStaffId,
 		staffChoices,
 		visibleCases,
+		intakeSubmissions,
 		metrics,
 		setRole,
 		setCurrentStaffId,
@@ -675,12 +780,15 @@ function DemoWorkspaceProvider({ children }) {
 		removeCaseworkerAssignment,
 		setPrimaryCaseworker,
 		updateIntakeField,
+		findIntakeMatches,
+		createCaseFromIntake,
 		addNote,
 		editNote,
 		addConcreteService
 	}), [
 		cases,
 		currentStaffId,
+		intakeSubmissions,
 		metrics,
 		notes,
 		role,

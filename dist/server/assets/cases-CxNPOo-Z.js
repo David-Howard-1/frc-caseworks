@@ -1,4 +1,4 @@
-import { a as formatDate, d as programs, l as getProgram, t as useDemoWorkspace } from "./useDemoWorkspace-xnVl1622.js";
+import { a as formatDate, d as programs, l as getProgram, t as useDemoWorkspace } from "./useDemoWorkspace-hb7yBQ3W.js";
 import { i as ProgramBadge, n as EmptyState, o as RiskBadge, t as CaseStatusBadge } from "./CaseworkUI-CJDE9kkn.js";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";

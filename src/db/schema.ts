@@ -26,6 +26,13 @@ export const programEnrollmentStatusEnum = mysqlEnum(
   ['active', 'pending', 'completed', 'inactive', 'waitlisted'],
 )
 
+export const intakeStatusEnum = mysqlEnum('intake_status', [
+  'draft',
+  'duplicate_review',
+  'rejected',
+  'converted_to_case',
+])
+
 export const userRoleEnum = mysqlEnum('user_role', [
   'caseworker',
   'program_supervisor',
@@ -172,6 +179,59 @@ export const primaryIntakes = mysqlTable(
   },
   (table) => ({
     caseIdx: index('primary_intakes_case_idx').on(table.caseId),
+  }),
+)
+
+export const intakeSubmissions = mysqlTable(
+  'intake_submissions',
+  {
+    id: serial('id').primaryKey(),
+    frcId: int('frc_id')
+      .notNull()
+      .references(() => frcs.id),
+    caseId: int('case_id').references(() => cases.id),
+    createdById: int('created_by_id')
+      .notNull()
+      .references(() => users.id),
+    convertedById: int('converted_by_id').references(() => users.id),
+    status: intakeStatusEnum.default('draft').notNull(),
+    intakeDate: date('intake_date'),
+    savedAt: timestamp('saved_at'),
+    duplicateWarnings: json('duplicate_warnings')
+      .$type<
+        Array<{
+          recordType: 'case' | 'intake' | 'person'
+          recordId: number | string
+          strength: 'high' | 'medium' | 'low'
+          reason: string
+        }>
+      >(),
+    duplicateOverrideReason: text('duplicate_override_reason'),
+    clientSnapshot: json('client_snapshot').$type<Record<string, unknown>>(),
+    demographicSnapshot: json('demographic_snapshot').$type<
+      Record<string, unknown>
+    >(),
+    incomeSources: json('income_sources')
+      .$type<Array<Record<string, unknown>>>(),
+    benefits: json('benefits')
+      .$type<Array<Record<string, unknown>>>(),
+    relevantContacts: json('relevant_contacts')
+      .$type<Array<Record<string, unknown>>>(),
+    legalSnapshot: json('legal_snapshot').$type<Record<string, unknown>>(),
+    housingSnapshot: json('housing_snapshot').$type<Record<string, unknown>>(),
+    fieldValues: json('field_values').$type<Record<string, unknown>>(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    frcStatusIdx: index('intake_submissions_frc_status_idx').on(
+      table.frcId,
+      table.status,
+    ),
+    caseIdx: index('intake_submissions_case_idx').on(table.caseId),
+    createdByIdx: index('intake_submissions_created_by_idx').on(
+      table.createdById,
+    ),
   }),
 )
 
@@ -353,6 +413,7 @@ export const frcsRelations = relations(frcs, ({ many }) => ({
   programs: many(programs),
   people: many(people),
   cases: many(cases),
+  intakeSubmissions: many(intakeSubmissions),
 }))
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -368,6 +429,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     relationName: 'enrollmentSupervisor',
   }),
   notes: many(caseNotes),
+  createdIntakes: many(intakeSubmissions, { relationName: 'intakeCreator' }),
+  convertedIntakes: many(intakeSubmissions, {
+    relationName: 'intakeConverter',
+  }),
 }))
 
 export const programsRelations = relations(programs, ({ one, many }) => ({
@@ -401,10 +466,35 @@ export const casesRelations = relations(cases, ({ one, many }) => ({
     references: [people.id],
   }),
   primaryIntakes: many(primaryIntakes),
+  intakeSubmissions: many(intakeSubmissions),
   programEnrollments: many(caseProgramEnrollments),
   notes: many(caseNotes),
   concreteServices: many(concreteServices),
 }))
+
+export const intakeSubmissionsRelations = relations(
+  intakeSubmissions,
+  ({ one }) => ({
+    frc: one(frcs, {
+      fields: [intakeSubmissions.frcId],
+      references: [frcs.id],
+    }),
+    case: one(cases, {
+      fields: [intakeSubmissions.caseId],
+      references: [cases.id],
+    }),
+    createdBy: one(users, {
+      fields: [intakeSubmissions.createdById],
+      references: [users.id],
+      relationName: 'intakeCreator',
+    }),
+    convertedBy: one(users, {
+      fields: [intakeSubmissions.convertedById],
+      references: [users.id],
+      relationName: 'intakeConverter',
+    }),
+  }),
+)
 
 export const caseProgramEnrollmentsRelations = relations(
   caseProgramEnrollments,

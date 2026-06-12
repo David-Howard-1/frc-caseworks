@@ -1,4 +1,4 @@
-import { a as formatDate, d as programs, i as formatCurrency, l as getProgram, t as useDemoWorkspace } from "./useDemoWorkspace-xnVl1622.js";
+import { a as formatDate, d as programs, i as formatCurrency, l as getProgram, t as useDemoWorkspace } from "./useDemoWorkspace-hb7yBQ3W.js";
 import { i as ProgramBadge, r as MetricTile, t as CaseStatusBadge } from "./CaseworkUI-CJDE9kkn.js";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { Box, Group, SimpleGrid, Stack, Table, Text, Title } from "@mantine/core";
