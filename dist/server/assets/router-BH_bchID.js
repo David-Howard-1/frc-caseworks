@@ -1,20 +1,15 @@
-import { n as DemoWorkspaceProvider, t as useDemoWorkspace } from "./useDemoWorkspace-hb7yBQ3W.js";
-import { t as Route$6 } from "./_caseId-C9BMBjTg.js";
+import { n as DemoWorkspaceProvider, t as useDemoWorkspace } from "./useDemoWorkspace-CZNFquIu.js";
+import { t as Route$6 } from "./_caseId-vk3x0fhS.js";
 import { HeadContent, Link, Outlet, Scripts, createFileRoute, createRootRoute, createRouter, lazyRouteComponent, useRouterState } from "@tanstack/react-router";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { AppShell, Box, Button, ColorSchemeScript, Group, MantineProvider, SegmentedControl, Select, Stack, Text, ThemeIcon, Title, createTheme } from "@mantine/core";
-import { BriefcaseBusiness, ClipboardList, FileChartColumn, HeartHandshake, LayoutDashboard, Plus } from "lucide-react";
+import { BriefcaseBusiness, FileChartColumn, HeartHandshake, LayoutDashboard, Plus } from "lucide-react";
 //#region src/components/AppFrame.tsx
 var navigation = [
 	{
 		label: "Dashboard",
 		to: "/",
 		icon: LayoutDashboard
-	},
-	{
-		label: "Intake",
-		to: "/intake",
-		icon: ClipboardList
 	},
 	{
 		label: "Cases",
@@ -187,11 +182,11 @@ function RootDocument({ children }) {
 }
 //#endregion
 //#region src/routes/reports.tsx
-var $$splitComponentImporter$4 = () => import("./reports-DFT6YUJ0.js");
+var $$splitComponentImporter$4 = () => import("./reports-DRsoJy58.js");
 var Route$4 = createFileRoute("/reports")({ component: lazyRouteComponent($$splitComponentImporter$4, "component") });
 //#endregion
 //#region src/routes/intake.tsx
-var $$splitComponentImporter$3 = () => import("./intake-D9V-XzlQ.js");
+var $$splitComponentImporter$3 = () => import("./intake-isl_5wuJ.js");
 var Route$3 = createFileRoute("/intake")({ component: lazyRouteComponent($$splitComponentImporter$3, "component") });
 //#endregion
 //#region src/routes/cases/route.tsx
@@ -199,11 +194,11 @@ var $$splitComponentImporter$2 = () => import("./route-BoHY-RXt.js");
 var Route$2 = createFileRoute("/cases")({ component: lazyRouteComponent($$splitComponentImporter$2, "component") });
 //#endregion
 //#region src/routes/index.tsx
-var $$splitComponentImporter$1 = () => import("./routes-CU19nta4.js");
+var $$splitComponentImporter$1 = () => import("./routes-fTLzEDis.js");
 var Route$1 = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
 //#endregion
 //#region src/routes/cases/index.tsx
-var $$splitComponentImporter = () => import("./cases-CxNPOo-Z.js");
+var $$splitComponentImporter = () => import("./cases-6LNjvh5B.js");
 var Route = createFileRoute("/cases/")({ component: lazyRouteComponent($$splitComponentImporter, "component") });
 //#endregion
 //#region src/routeTree.gen.ts

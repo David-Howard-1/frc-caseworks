@@ -1,4 +1,5 @@
-import { i as formatCurrency, r as buildGrantReport, t as useDemoWorkspace } from "./useDemoWorkspace-hb7yBQ3W.js";
+import { t as useDemoWorkspace } from "./useDemoWorkspace-CZNFquIu.js";
+import { r as formatCurrency, t as buildGrantReport } from "./demo-data-BsOXExLV.js";
 import { r as MetricTile } from "./CaseworkUI-CJDE9kkn.js";
 import { useState } from "react";
 import { jsx, jsxs } from "react/jsx-runtime";

@@ -4,12 +4,10 @@ import {
   date,
   decimal,
   index,
-  int,
   json,
   mysqlEnum,
   mysqlTable,
   primaryKey,
-  serial,
   text,
   timestamp,
   varchar,
@@ -20,6 +18,8 @@ export const caseStatusEnum = mysqlEnum('case_status', [
   'pending',
   'closed',
 ])
+
+export const caseRiskEnum = mysqlEnum('case_risk', ['low', 'medium', 'high'])
 
 export const programEnrollmentStatusEnum = mysqlEnum(
   'program_enrollment_status',
@@ -48,7 +48,7 @@ export const peopleRoleEnum = mysqlEnum('person_role', [
 ])
 
 export const frcs = mysqlTable('frcs', {
-  id: serial('id').primaryKey(),
+  id: varchar('id', { length: 64 }).primaryKey(),
   name: varchar('name', { length: 191 }).notNull(),
   legalName: varchar('legal_name', { length: 191 }),
   county: varchar('county', { length: 120 }),
@@ -60,8 +60,8 @@ export const frcs = mysqlTable('frcs', {
 export const users = mysqlTable(
   'users',
   {
-    id: serial('id').primaryKey(),
-    frcId: int('frc_id')
+    id: varchar('id', { length: 64 }).primaryKey(),
+    frcId: varchar('frc_id', { length: 64 })
       .notNull()
       .references(() => frcs.id),
     role: userRoleEnum.notNull(),
@@ -79,15 +79,18 @@ export const users = mysqlTable(
 export const programs = mysqlTable(
   'programs',
   {
-    id: serial('id').primaryKey(),
-    frcId: int('frc_id')
+    id: varchar('id', { length: 64 }).primaryKey(),
+    frcId: varchar('frc_id', { length: 64 })
       .notNull()
       .references(() => frcs.id),
     code: varchar('code', { length: 48 }).notNull(),
     name: varchar('name', { length: 191 }).notNull(),
     grantor: varchar('grantor', { length: 120 }),
     reportingType: varchar('reporting_type', { length: 80 }),
-    supervisorId: int('supervisor_id').references(() => users.id),
+    color: varchar('color', { length: 24 }),
+    supervisorId: varchar('supervisor_id', { length: 64 }).references(
+      () => users.id,
+    ),
     isActive: boolean('is_active').default(true).notNull(),
   },
   (table) => ({
@@ -96,11 +99,26 @@ export const programs = mysqlTable(
   }),
 )
 
+export const userPrograms = mysqlTable(
+  'user_programs',
+  {
+    userId: varchar('user_id', { length: 64 })
+      .notNull()
+      .references(() => users.id),
+    programId: varchar('program_id', { length: 64 })
+      .notNull()
+      .references(() => programs.id),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.programId] }),
+  }),
+)
+
 export const people = mysqlTable(
   'people',
   {
-    id: serial('id').primaryKey(),
-    frcId: int('frc_id')
+    id: varchar('id', { length: 64 }).primaryKey(),
+    frcId: varchar('frc_id', { length: 64 })
       .notNull()
       .references(() => frcs.id),
     personRole: peopleRoleEnum.default('client').notNull(),
@@ -108,7 +126,9 @@ export const people = mysqlTable(
     middleName: varchar('middle_name', { length: 120 }),
     lastName: varchar('last_name', { length: 120 }),
     preferredName: varchar('preferred_name', { length: 120 }),
-    dateOfBirth: date('date_of_birth'),
+    pronouns: varchar('pronouns', { length: 40 }),
+    approximateAge: varchar('approximate_age', { length: 16 }),
+    dateOfBirth: date('date_of_birth', { mode: 'string' }),
     phone: varchar('phone', { length: 40 }),
     email: varchar('email', { length: 191 }),
     addressLine1: varchar('address_line_1', { length: 191 }),
@@ -132,16 +152,18 @@ export const people = mysqlTable(
 export const cases = mysqlTable(
   'cases',
   {
-    id: serial('id').primaryKey(),
-    frcId: int('frc_id')
+    id: varchar('id', { length: 64 }).primaryKey(),
+    frcId: varchar('frc_id', { length: 64 })
       .notNull()
       .references(() => frcs.id),
-    primaryPersonId: int('primary_person_id')
+    primaryPersonId: varchar('primary_person_id', { length: 64 })
       .notNull()
       .references(() => people.id),
     status: caseStatusEnum.default('pending').notNull(),
-    openedAt: date('opened_at'),
-    closedAt: date('closed_at'),
+    risk: caseRiskEnum.default('low').notNull(),
+    openedAt: date('opened_at', { mode: 'string' }),
+    lastContactAt: date('last_contact_at', { mode: 'string' }),
+    closedAt: date('closed_at', { mode: 'string' }),
     closureReason: varchar('closure_reason', { length: 191 }),
     householdName: varchar('household_name', { length: 191 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -158,21 +180,20 @@ export const cases = mysqlTable(
 export const primaryIntakes = mysqlTable(
   'primary_intakes',
   {
-    id: serial('id').primaryKey(),
-    caseId: int('case_id')
+    id: varchar('id', { length: 64 }).primaryKey(),
+    caseId: varchar('case_id', { length: 64 })
       .notNull()
       .references(() => cases.id),
-    completedById: int('completed_by_id').references(() => users.id),
-    intakeDate: date('intake_date'),
+    completedById: varchar('completed_by_id', { length: 64 }).references(
+      () => users.id,
+    ),
+    intakeDate: date('intake_date', { mode: 'string' }),
     referralSource: varchar('referral_source', { length: 191 }),
     familyStrengths: text('family_strengths'),
     presentingNeeds: text('presenting_needs'),
     safetyConcerns: text('safety_concerns'),
-    householdIncome: decimal('household_income', {
-      precision: 10,
-      scale: 2,
-      mode: 'number',
-    }),
+    householdIncome: varchar('household_income', { length: 120 }),
+    housing: varchar('housing', { length: 191 }),
     fieldValues: json('field_values').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
@@ -185,32 +206,27 @@ export const primaryIntakes = mysqlTable(
 export const intakeSubmissions = mysqlTable(
   'intake_submissions',
   {
-    id: serial('id').primaryKey(),
-    frcId: int('frc_id')
+    id: varchar('id', { length: 64 }).primaryKey(),
+    frcId: varchar('frc_id', { length: 64 })
       .notNull()
       .references(() => frcs.id),
-    caseId: int('case_id').references(() => cases.id),
-    createdById: int('created_by_id')
+    caseId: varchar('case_id', { length: 64 }).references(() => cases.id),
+    createdById: varchar('created_by_id', { length: 64 })
       .notNull()
       .references(() => users.id),
-    convertedById: int('converted_by_id').references(() => users.id),
+    convertedById: varchar('converted_by_id', { length: 64 }).references(
+      () => users.id,
+    ),
     status: intakeStatusEnum.default('draft').notNull(),
-    intakeDate: date('intake_date'),
+    startedAt: timestamp('started_at').notNull(),
     savedAt: timestamp('saved_at'),
-    duplicateWarnings: json('duplicate_warnings')
-      .$type<
-        Array<{
-          recordType: 'case' | 'intake' | 'person'
-          recordId: number | string
-          strength: 'high' | 'medium' | 'low'
-          reason: string
-        }>
-      >(),
+    duplicateWarnings: json('duplicate_warnings').$type<string[]>(),
     duplicateOverrideReason: text('duplicate_override_reason'),
     clientSnapshot: json('client_snapshot').$type<Record<string, unknown>>(),
     demographicSnapshot: json('demographic_snapshot').$type<
       Record<string, unknown>
     >(),
+    addressSnapshot: json('address_snapshot').$type<Record<string, unknown>>(),
     incomeSources: json('income_sources')
       .$type<Array<Record<string, unknown>>>(),
     benefits: json('benefits')
@@ -219,7 +235,6 @@ export const intakeSubmissions = mysqlTable(
       .$type<Array<Record<string, unknown>>>(),
     legalSnapshot: json('legal_snapshot').$type<Record<string, unknown>>(),
     housingSnapshot: json('housing_snapshot').$type<Record<string, unknown>>(),
-    fieldValues: json('field_values').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
   },
@@ -238,17 +253,20 @@ export const intakeSubmissions = mysqlTable(
 export const caseProgramEnrollments = mysqlTable(
   'case_program_enrollments',
   {
-    id: serial('id').primaryKey(),
-    caseId: int('case_id')
+    id: varchar('id', { length: 64 }).primaryKey(),
+    caseId: varchar('case_id', { length: 64 })
       .notNull()
       .references(() => cases.id),
-    programId: int('program_id')
+    programId: varchar('program_id', { length: 64 })
       .notNull()
       .references(() => programs.id),
-    supervisorId: int('supervisor_id').references(() => users.id),
+    supervisorId: varchar('supervisor_id', { length: 64 }).references(
+      () => users.id,
+    ),
     status: programEnrollmentStatusEnum.default('pending').notNull(),
-    startDate: date('start_date'),
-    endDate: date('end_date'),
+    startDate: date('start_date', { mode: 'string' }),
+    targetDate: date('target_date', { mode: 'string' }),
+    endDate: date('end_date', { mode: 'string' }),
     goalSummary: text('goal_summary'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
@@ -264,10 +282,10 @@ export const caseProgramEnrollments = mysqlTable(
 export const caseProgramCaseworkers = mysqlTable(
   'case_program_caseworkers',
   {
-    programEnrollmentId: int('program_enrollment_id')
+    programEnrollmentId: varchar('program_enrollment_id', { length: 64 })
       .notNull()
       .references(() => caseProgramEnrollments.id),
-    caseworkerId: int('caseworker_id')
+    caseworkerId: varchar('caseworker_id', { length: 64 })
       .notNull()
       .references(() => users.id),
     isPrimary: boolean('is_primary').default(false).notNull(),
@@ -290,17 +308,17 @@ export const caseProgramCaseworkers = mysqlTable(
 export const caseNotes = mysqlTable(
   'case_notes',
   {
-    id: serial('id').primaryKey(),
-    caseId: int('case_id')
+    id: varchar('id', { length: 64 }).primaryKey(),
+    caseId: varchar('case_id', { length: 64 })
       .notNull()
       .references(() => cases.id),
-    programEnrollmentId: int('program_enrollment_id').references(
-      () => caseProgramEnrollments.id,
-    ),
-    authorId: int('author_id')
+    programEnrollmentId: varchar('program_enrollment_id', {
+      length: 64,
+    }).references(() => caseProgramEnrollments.id),
+    authorId: varchar('author_id', { length: 64 })
       .notNull()
       .references(() => users.id),
-    noteDate: date('note_date').notNull(),
+    noteDate: date('note_date', { mode: 'string' }).notNull(),
     contactType: varchar('contact_type', { length: 80 }),
     summary: varchar('summary', { length: 191 }),
     body: text('body').notNull(),
@@ -328,15 +346,17 @@ export const caseNotes = mysqlTable(
 export const concreteServices = mysqlTable(
   'concrete_services',
   {
-    id: serial('id').primaryKey(),
-    caseId: int('case_id')
+    id: varchar('id', { length: 64 }).primaryKey(),
+    caseId: varchar('case_id', { length: 64 })
       .notNull()
       .references(() => cases.id),
-    programEnrollmentId: int('program_enrollment_id').references(
-      () => caseProgramEnrollments.id,
+    programEnrollmentId: varchar('program_enrollment_id', {
+      length: 64,
+    }).references(() => caseProgramEnrollments.id),
+    providedById: varchar('provided_by_id', { length: 64 }).references(
+      () => users.id,
     ),
-    providedById: int('provided_by_id').references(() => users.id),
-    serviceDate: date('service_date').notNull(),
+    serviceDate: date('service_date', { mode: 'string' }).notNull(),
     category: varchar('category', { length: 120 }).notNull(),
     description: varchar('description', { length: 255 }).notNull(),
     amount: decimal('amount', {
@@ -347,6 +367,7 @@ export const concreteServices = mysqlTable(
       .default(0)
       .notNull(),
     grantCode: varchar('grant_code', { length: 80 }),
+    grantor: varchar('grantor', { length: 120 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
@@ -364,21 +385,24 @@ export const concreteServices = mysqlTable(
 export const personRelationships = mysqlTable(
   'person_relationships',
   {
-    sourcePersonId: int('source_person_id')
+    id: varchar('id', { length: 64 }).primaryKey(),
+    sourcePersonId: varchar('source_person_id', { length: 64 })
       .notNull()
       .references(() => people.id),
-    relatedPersonId: int('related_person_id')
+    relatedPersonId: varchar('related_person_id', { length: 64 })
       .notNull()
       .references(() => people.id),
     relationship: varchar('relationship', { length: 80 }).notNull(),
     livesInHousehold: boolean('lives_in_household').default(true).notNull(),
-    relatedCaseId: int('related_case_id').references(() => cases.id),
+    relatedCaseId: varchar('related_case_id', { length: 64 }).references(
+      () => cases.id,
+    ),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
-    pk: primaryKey({
-      columns: [table.sourcePersonId, table.relatedPersonId, table.relationship],
-    }),
+    sourceIdx: index('person_relationships_source_idx').on(
+      table.sourcePersonId,
+    ),
     relatedCaseIdx: index('person_relationships_related_case_idx').on(
       table.relatedCaseId,
     ),
@@ -388,15 +412,17 @@ export const personRelationships = mysqlTable(
 export const savedReports = mysqlTable(
   'saved_reports',
   {
-    id: serial('id').primaryKey(),
-    frcId: int('frc_id')
+    id: varchar('id', { length: 64 }).primaryKey(),
+    frcId: varchar('frc_id', { length: 64 })
       .notNull()
       .references(() => frcs.id),
     name: varchar('name', { length: 191 }).notNull(),
     grantor: varchar('grantor', { length: 120 }).notNull(),
-    periodStart: date('period_start').notNull(),
-    periodEnd: date('period_end').notNull(),
-    generatedById: int('generated_by_id').references(() => users.id),
+    periodStart: date('period_start', { mode: 'string' }).notNull(),
+    periodEnd: date('period_end', { mode: 'string' }).notNull(),
+    generatedById: varchar('generated_by_id', { length: 64 }).references(
+      () => users.id,
+    ),
     metrics: json('metrics').$type<Record<string, number | string>>(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
@@ -422,17 +448,11 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [frcs.id],
   }),
   supervisedPrograms: many(programs, { relationName: 'programSupervisor' }),
+  programMemberships: many(userPrograms),
   caseworkerAssignments: many(caseProgramCaseworkers, {
     relationName: 'caseProgramCaseworkerUser',
   }),
-  supervisorAssignments: many(caseProgramEnrollments, {
-    relationName: 'enrollmentSupervisor',
-  }),
   notes: many(caseNotes),
-  createdIntakes: many(intakeSubmissions, { relationName: 'intakeCreator' }),
-  convertedIntakes: many(intakeSubmissions, {
-    relationName: 'intakeConverter',
-  }),
 }))
 
 export const programsRelations = relations(programs, ({ one, many }) => ({
@@ -445,7 +465,19 @@ export const programsRelations = relations(programs, ({ one, many }) => ({
     references: [users.id],
     relationName: 'programSupervisor',
   }),
+  memberships: many(userPrograms),
   enrollments: many(caseProgramEnrollments),
+}))
+
+export const userProgramsRelations = relations(userPrograms, ({ one }) => ({
+  user: one(users, {
+    fields: [userPrograms.userId],
+    references: [users.id],
+  }),
+  program: one(programs, {
+    fields: [userPrograms.programId],
+    references: [programs.id],
+  }),
 }))
 
 export const peopleRelations = relations(people, ({ one, many }) => ({
@@ -454,6 +486,7 @@ export const peopleRelations = relations(people, ({ one, many }) => ({
     references: [frcs.id],
   }),
   cases: many(cases),
+  relationships: many(personRelationships, { relationName: 'sourcePerson' }),
 }))
 
 export const casesRelations = relations(cases, ({ one, many }) => ({
@@ -471,64 +504,3 @@ export const casesRelations = relations(cases, ({ one, many }) => ({
   notes: many(caseNotes),
   concreteServices: many(concreteServices),
 }))
-
-export const intakeSubmissionsRelations = relations(
-  intakeSubmissions,
-  ({ one }) => ({
-    frc: one(frcs, {
-      fields: [intakeSubmissions.frcId],
-      references: [frcs.id],
-    }),
-    case: one(cases, {
-      fields: [intakeSubmissions.caseId],
-      references: [cases.id],
-    }),
-    createdBy: one(users, {
-      fields: [intakeSubmissions.createdById],
-      references: [users.id],
-      relationName: 'intakeCreator',
-    }),
-    convertedBy: one(users, {
-      fields: [intakeSubmissions.convertedById],
-      references: [users.id],
-      relationName: 'intakeConverter',
-    }),
-  }),
-)
-
-export const caseProgramEnrollmentsRelations = relations(
-  caseProgramEnrollments,
-  ({ one, many }) => ({
-    case: one(cases, {
-      fields: [caseProgramEnrollments.caseId],
-      references: [cases.id],
-    }),
-    program: one(programs, {
-      fields: [caseProgramEnrollments.programId],
-      references: [programs.id],
-    }),
-    supervisor: one(users, {
-      fields: [caseProgramEnrollments.supervisorId],
-      references: [users.id],
-      relationName: 'enrollmentSupervisor',
-    }),
-    assignedCaseworkers: many(caseProgramCaseworkers),
-    notes: many(caseNotes),
-    concreteServices: many(concreteServices),
-  }),
-)
-
-export const caseProgramCaseworkersRelations = relations(
-  caseProgramCaseworkers,
-  ({ one }) => ({
-    programEnrollment: one(caseProgramEnrollments, {
-      fields: [caseProgramCaseworkers.programEnrollmentId],
-      references: [caseProgramEnrollments.id],
-    }),
-    caseworker: one(users, {
-      fields: [caseProgramCaseworkers.caseworkerId],
-      references: [users.id],
-      relationName: 'caseProgramCaseworkerUser',
-    }),
-  }),
-)

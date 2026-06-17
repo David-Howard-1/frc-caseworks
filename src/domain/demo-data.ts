@@ -216,6 +216,13 @@ export type ClientCase = {
   relatedPeople: RelatedPerson[]
 }
 
+export type WorkspaceSnapshot = {
+  cases: ClientCase[]
+  intakeSubmissions: IntakeSubmission[]
+  notes: CaseNote[]
+  services: ConcreteService[]
+}
+
 export const programs: Program[] = [
   {
     id: 'anf-parents',
@@ -656,6 +663,13 @@ export const initialServices: ConcreteService[] = [
     grantor: 'Private Foundation',
   },
 ]
+
+export const initialWorkspaceSnapshot: WorkspaceSnapshot = {
+  cases: initialCases,
+  intakeSubmissions: [],
+  notes: initialNotes,
+  services: initialServices,
+}
 
 export const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-US', {

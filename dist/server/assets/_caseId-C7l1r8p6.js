@@ -1,5 +1,6 @@
-import { a as formatDate, c as getPrimaryCaseworker, f as staff, l as getProgram, o as formatExactCurrency, s as getAssignedCaseworkers, t as useDemoWorkspace, u as getStaff } from "./useDemoWorkspace-hb7yBQ3W.js";
-import { t as Route } from "./_caseId-C9BMBjTg.js";
+import { t as useDemoWorkspace } from "./useDemoWorkspace-CZNFquIu.js";
+import { a as formatExactCurrency, c as getProgram, h as staff, i as formatDate, l as getStaff, o as getAssignedCaseworkers, s as getPrimaryCaseworker } from "./demo-data-BsOXExLV.js";
+import { t as Route } from "./_caseId-vk3x0fhS.js";
 import { a as ProgramStatusBadge, i as ProgramBadge, n as EmptyState, o as RiskBadge, t as CaseStatusBadge } from "./CaseworkUI-CJDE9kkn.js";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";

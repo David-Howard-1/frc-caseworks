@@ -1,4 +1,5 @@
-import { a as formatDate, t as useDemoWorkspace } from "./useDemoWorkspace-hb7yBQ3W.js";
+import { t as useDemoWorkspace } from "./useDemoWorkspace-CZNFquIu.js";
+import { i as formatDate } from "./demo-data-BsOXExLV.js";
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { jsx, jsxs } from "react/jsx-runtime";

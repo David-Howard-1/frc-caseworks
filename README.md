@@ -17,6 +17,23 @@ pnpm install
 pnpm dev
 ```
 
+## Database
+
+The MySQL Drizzle schema in `src/db/schema.ts` is the source of truth. The app
+will still boot with the bundled fixture data when `DATABASE_URL` is not set,
+but setting `DATABASE_URL` enables server-backed persistence for the first-draft
+casework flows.
+
+```bash
+DATABASE_URL="mysql://user:password@localhost:3306/frc_caseworks"
+pnpm db:push
+pnpm dev
+```
+
+On the first request against an empty database, the app seeds the existing demo
+workspace into normalized MySQL tables. Drizzle migrations are generated into
+`drizzle/`.
+
 ## Routes
 
 - `/` - Simple dashboard overview
