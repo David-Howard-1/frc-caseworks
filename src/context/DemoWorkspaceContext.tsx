@@ -1,3 +1,4 @@
+import { useServerFn } from '@tanstack/react-start'
 import { createContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
@@ -12,12 +13,24 @@ import {
   type UserRole,
   calculateMetrics,
   getProgram,
-  initialCases,
-  initialNotes,
-  initialServices,
+  initialWorkspaceSnapshot,
   staff,
   visibleCasesForRole,
+  type WorkspaceSnapshot,
 } from '~/domain/demo-data'
+import {
+  addCaseworkerAssignmentFn,
+  addConcreteServiceFn,
+  addNoteFn,
+  createCaseFromIntakeFn,
+  editNoteFn,
+  loadWorkspaceFn,
+  removeCaseworkerAssignmentFn,
+  setPrimaryCaseworkerFn,
+  updateCaseStatusFn,
+  updateEnrollmentFn,
+  updateIntakeFieldFn,
+} from '~/use-cases/workspaceServerFns'
 
 const TODAY = '2026-06-10'
 
@@ -29,6 +42,7 @@ const roleDefaults: Record<UserRole, string> = {
 
 const normalize = (value?: string) => value?.trim().toLowerCase() ?? ''
 const normalizePhone = (value?: string) => value?.replace(/\D/g, '') ?? ''
+const normalizeSsn = (value?: string) => value?.replace(/\D/g, '') ?? ''
 
 export type AddNoteInput = {
   enrollmentId: string
@@ -102,6 +116,7 @@ export type IntakeMatchInput = {
   dateOfBirth?: string
   phone?: string
   email?: string
+  ssn?: string
 }
 
 export type IntakeMatch = {
@@ -120,20 +135,48 @@ export type IntakeMatch = {
 
 export function DemoWorkspaceProvider({
   children,
-}: Readonly<{ children: ReactNode }>) {
-  const [cases, setCases] = useState<ClientCase[]>(initialCases)
+  initialSnapshot = initialWorkspaceSnapshot,
+}: Readonly<{ children: ReactNode; initialSnapshot?: WorkspaceSnapshot }>) {
+  const loadWorkspace = useServerFn(loadWorkspaceFn)
+  const persistUpdateCaseStatus = useServerFn(updateCaseStatusFn)
+  const persistUpdateEnrollment = useServerFn(updateEnrollmentFn)
+  const persistAddCaseworkerAssignment = useServerFn(addCaseworkerAssignmentFn)
+  const persistRemoveCaseworkerAssignment = useServerFn(
+    removeCaseworkerAssignmentFn,
+  )
+  const persistSetPrimaryCaseworker = useServerFn(setPrimaryCaseworkerFn)
+  const persistUpdateIntakeField = useServerFn(updateIntakeFieldFn)
+  const persistAddNote = useServerFn(addNoteFn)
+  const persistEditNote = useServerFn(editNoteFn)
+  const persistAddConcreteService = useServerFn(addConcreteServiceFn)
+  const persistCreateCaseFromIntake = useServerFn(createCaseFromIntakeFn)
+
+  const [cases, setCases] = useState<ClientCase[]>(initialSnapshot.cases)
   const [intakeSubmissions, setIntakeSubmissions] = useState<
     IntakeSubmission[]
-  >([])
-  const [notes, setNotes] = useState<CaseNote[]>(initialNotes)
+  >(initialSnapshot.intakeSubmissions)
+  const [notes, setNotes] = useState<CaseNote[]>(initialSnapshot.notes)
   const [services, setServices] =
-    useState<ConcreteService[]>(initialServices)
+    useState<ConcreteService[]>(initialSnapshot.services)
   const [role, setRole] = useState<UserRole>('Caseworker')
   const [currentStaffId, setCurrentStaffId] = useState(roleDefaults.Caseworker)
 
   useEffect(() => {
     setCurrentStaffId(roleDefaults[role])
   }, [role])
+
+  useEffect(() => {
+    void loadWorkspace()
+      .then((snapshot) => {
+        setCases(snapshot.cases)
+        setIntakeSubmissions(snapshot.intakeSubmissions)
+        setNotes(snapshot.notes)
+        setServices(snapshot.services)
+      })
+      .catch((error) => {
+        console.error('Unable to load persisted workspace.', error)
+      })
+  }, [loadWorkspace])
 
   const staffChoices = useMemo(
     () => staff.filter((person) => person.role === role),
@@ -177,6 +220,9 @@ export function DemoWorkspaceProvider({
           : caseRecord,
       ),
     )
+    void persistUpdateCaseStatus({ data: { caseId, status } }).catch((error) => {
+      console.error('Unable to persist case status.', error)
+    })
   }
 
   function updateEnrollment(
@@ -202,6 +248,11 @@ export function DemoWorkspaceProvider({
           : caseRecord,
       ),
     )
+    void persistUpdateEnrollment({
+      data: { enrollmentId, patch },
+    }).catch((error) => {
+      console.error('Unable to persist enrollment update.', error)
+    })
   }
 
   function addCaseworkerAssignment(
@@ -209,6 +260,11 @@ export function DemoWorkspaceProvider({
     enrollmentId: string,
     staffId: string,
   ) {
+    const caseRecord = cases.find((item) => item.id === caseId)
+    const enrollment = caseRecord?.enrollments.find(
+      (item) => item.id === enrollmentId,
+    )
+
     setCases((currentCases) =>
       currentCases.map((caseRecord) =>
         caseRecord.id === caseId
@@ -239,6 +295,14 @@ export function DemoWorkspaceProvider({
           : caseRecord,
       ),
     )
+
+    if (enrollment) {
+      void persistAddCaseworkerAssignment({
+        data: { enrollment, staffId },
+      }).catch((error) => {
+        console.error('Unable to persist caseworker assignment.', error)
+      })
+    }
   }
 
   function removeCaseworkerAssignment(
@@ -277,6 +341,11 @@ export function DemoWorkspaceProvider({
           : caseRecord,
       ),
     )
+    void persistRemoveCaseworkerAssignment({
+      data: { enrollmentId, staffId },
+    }).catch((error) => {
+      console.error('Unable to persist caseworker removal.', error)
+    })
   }
 
   function setPrimaryCaseworker(
@@ -304,6 +373,11 @@ export function DemoWorkspaceProvider({
           : caseRecord,
       ),
     )
+    void persistSetPrimaryCaseworker({
+      data: { enrollmentId, staffId },
+    }).catch((error) => {
+      console.error('Unable to persist primary caseworker.', error)
+    })
   }
 
   function updateIntakeField(
@@ -325,6 +399,11 @@ export function DemoWorkspaceProvider({
           : caseRecord,
       ),
     )
+    void persistUpdateIntakeField({
+      data: { caseId, field, value },
+    }).catch((error) => {
+      console.error('Unable to persist intake field.', error)
+    })
   }
 
   function findIntakeMatches(input: IntakeMatchInput) {
@@ -332,8 +411,16 @@ export function DemoWorkspaceProvider({
     const lastName = normalize(input.lastName)
     const phone = normalizePhone(input.phone)
     const email = normalize(input.email)
+    const ssn = normalizeSsn(input.ssn)
 
-    if (!firstName && !lastName && !phone && !email && !input.dateOfBirth) {
+    if (
+      !firstName &&
+      !lastName &&
+      !phone &&
+      !email &&
+      !input.dateOfBirth &&
+      !ssn
+    ) {
       return []
     }
 
@@ -389,13 +476,18 @@ export function DemoWorkspaceProvider({
         const exactContact =
           (phone && normalizePhone(submission.client.phone) === phone) ||
           (email && normalize(submission.client.email) === email)
+        const exactSsn = ssn && normalizeSsn(submission.client.ssn) === ssn
+        const exactIdentity =
+          (input.dateOfBirth &&
+            submission.client.dateOfBirth === input.dateOfBirth) ||
+          exactSsn
         const nameScore =
           (firstName &&
             normalize(submission.client.firstName).startsWith(firstName)) ||
           (lastName &&
             normalize(submission.client.lastName).startsWith(lastName))
 
-        if (!nameScore && !exactContact) {
+        if (!nameScore && !exactContact && !exactIdentity) {
           return matches
         }
 
@@ -410,7 +502,8 @@ export function DemoWorkspaceProvider({
           lastUpdated: submission.savedAt ?? submission.startedAt,
           assignedStaff: staff.find((person) => person.id === submission.createdById)
             ?.name,
-          strength: exactContact ? 'High confidence' : 'Medium confidence',
+          strength:
+            exactContact || exactSsn ? 'High confidence' : 'Medium confidence',
         })
 
         return matches
@@ -420,7 +513,10 @@ export function DemoWorkspaceProvider({
   }
 
   function createCaseFromIntake(input: IntakeSubmission) {
-    const newCaseId = `case-${Date.now()}`
+    const timestamp = Date.now()
+    const newCaseId = `case-${timestamp}`
+    const newPersonId = `person-${timestamp}`
+    const newIntakeId = `intake-${timestamp}`
     const displayName = `${input.client.firstName.trim()} ${input.client.lastName.trim()}`
     const age = Number(input.client.approximateAge) || 0
     const hasHighDuplicate = input.duplicateWarnings.some((warning) =>
@@ -429,7 +525,7 @@ export function DemoWorkspaceProvider({
 
     const caseRecord: ClientCase = {
       id: newCaseId,
-      personId: `person-${Date.now()}`,
+      personId: newPersonId,
       displayName,
       pronouns: undefined,
       age,
@@ -477,7 +573,7 @@ export function DemoWorkspaceProvider({
     setIntakeSubmissions((currentSubmissions) => [
       {
         ...input,
-        id: `intake-${Date.now()}`,
+        id: newIntakeId,
         status: 'Converted to Case',
         caseId: newCaseId,
         convertedById: currentStaffId,
@@ -485,6 +581,18 @@ export function DemoWorkspaceProvider({
       },
       ...currentSubmissions,
     ])
+
+    void persistCreateCaseFromIntake({
+      data: {
+        intake: input,
+        currentStaffId,
+        caseId: newCaseId,
+        intakeId: newIntakeId,
+        personId: newPersonId,
+      },
+    }).catch((error) => {
+      console.error('Unable to persist intake conversion.', error)
+    })
 
     return newCaseId
   }
@@ -494,9 +602,10 @@ export function DemoWorkspaceProvider({
       return
     }
 
+    const noteId = `note-${Date.now()}`
     setNotes((currentNotes) => [
       {
-        id: `note-${Date.now()}`,
+        id: noteId,
         caseId,
         enrollmentId: input.enrollmentId,
         authorId: currentStaffId,
@@ -516,6 +625,16 @@ export function DemoWorkspaceProvider({
           : caseRecord,
       ),
     )
+    void persistAddNote({
+      data: {
+        caseId,
+        currentStaffId,
+        note: input,
+        noteId,
+      },
+    }).catch((error) => {
+      console.error('Unable to persist case note.', error)
+    })
   }
 
   function editNote(noteId: string, input: EditNoteInput) {
@@ -538,6 +657,14 @@ export function DemoWorkspaceProvider({
           : note,
       ),
     )
+    void persistEditNote({
+      data: {
+        noteId,
+        note: input,
+      },
+    }).catch((error) => {
+      console.error('Unable to persist note edit.', error)
+    })
   }
 
   function addConcreteService(caseId: string, input: AddServiceInput) {
@@ -546,14 +673,20 @@ export function DemoWorkspaceProvider({
     }
 
     const caseRecord = cases.find((item) => item.id === caseId)
+    if (!caseRecord) {
+      return
+    }
+
     const enrollment = caseRecord?.enrollments.find(
       (item) => item.id === input.enrollmentId,
     )
     const program = enrollment ? getProgram(enrollment.programId) : undefined
 
+    const serviceId = `svc-${Date.now()}`
+
     setServices((currentServices) => [
       {
-        id: `svc-${Date.now()}`,
+        id: serviceId,
         caseId,
         enrollmentId: input.enrollmentId,
         date: TODAY,
@@ -564,6 +697,16 @@ export function DemoWorkspaceProvider({
       },
       ...currentServices,
     ])
+    void persistAddConcreteService({
+      data: {
+        caseRecord,
+        currentStaffId,
+        service: input,
+        serviceId,
+      },
+    }).catch((error) => {
+      console.error('Unable to persist concrete service.', error)
+    })
   }
 
   const value = useMemo(

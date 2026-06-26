@@ -88,7 +88,7 @@ export function AppFrame({ children }: Readonly<{ children: ReactNode }>) {
             radius={6}
             to="/intake"
           >
-            New intake
+            New Intake
           </Button>
         </Group>
       </AppShell.Header>

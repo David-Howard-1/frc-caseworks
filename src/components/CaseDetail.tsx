@@ -13,7 +13,6 @@ import { useDemoWorkspace } from "~/hooks/useDemoWorkspace";
 import { roundToNearestQuarter } from "~/lib/util";
 import { EmptyState } from "./CaseworkUI";
 import { CaseHeader } from "./case-detail/CaseHeader";
-import { CaseStatusPanel } from "./case-detail/CaseStatusPanel";
 import { ClientInfoModal } from "./case-detail/ClientInfoModal";
 import { EnrollmentEditorModal } from "./case-detail/EnrollmentEditorModal";
 import { NoteEditorModal } from "./case-detail/NoteEditorModal";
@@ -415,7 +414,11 @@ export function CaseDetail({
 			<Stack gap='lg'>
 				<CaseHeader
 					caseRecord={currentCase}
+					concreteServicesTotal={caseServicesTotal}
 					onOpenClientInfo={clientInfoHandlers.open}
+					onStatusChange={(status: CaseStatus) =>
+						updateCaseStatus(currentCase.id, status)
+					}
 				/>
 
 				{!canViewCase ? (
@@ -425,14 +428,6 @@ export function CaseDetail({
 						</Text>
 					</Box>
 				) : null}
-
-				<CaseStatusPanel
-					caseRecord={currentCase}
-					concreteServicesTotal={caseServicesTotal}
-					onStatusChange={(status: CaseStatus) =>
-						updateCaseStatus(currentCase.id, status)
-					}
-				/>
 
 				<ProgramScopePanel
 					caseRecord={currentCase}

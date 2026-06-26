@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@mantine/core": "latest",
 		"@mantine/hooks": "latest",
+		"@tanstack/react-query": "^5.101.0",
 		"@tanstack/react-router": "latest",
 		"@tanstack/react-start": "latest",
 		"dayjs": "^1.11.21",

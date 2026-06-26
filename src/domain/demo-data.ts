@@ -91,6 +91,7 @@ export type IntakeSubmission = {
     lastName: string
     preferredName?: string
     dateOfBirth?: string
+    ssn?: string
     approximateAge?: string
     phone?: string
     alternatePhone?: string
@@ -214,6 +215,13 @@ export type ClientCase = {
   intake: Intake
   enrollments: CaseProgramEnrollment[]
   relatedPeople: RelatedPerson[]
+}
+
+export type WorkspaceSnapshot = {
+  cases: ClientCase[]
+  intakeSubmissions: IntakeSubmission[]
+  notes: CaseNote[]
+  services: ConcreteService[]
 }
 
 export const programs: Program[] = [
@@ -656,6 +664,13 @@ export const initialServices: ConcreteService[] = [
     grantor: 'Private Foundation',
   },
 ]
+
+export const initialWorkspaceSnapshot: WorkspaceSnapshot = {
+  cases: initialCases,
+  intakeSubmissions: [],
+  notes: initialNotes,
+  services: initialServices,
+}
 
 export const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-US', {

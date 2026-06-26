@@ -742,15 +742,53 @@ function isNotFound(obj) {
 var rootRouteId = "__root__";
 //#endregion
 //#region node_modules/.pnpm/@tanstack+router-core@1.171.13/node_modules/@tanstack/router-core/dist/esm/redirect.js
+/**
+* Create a redirect Response understood by TanStack Router.
+*
+* Use from route `loader`/`beforeLoad` or server functions to trigger a
+* navigation. If `throw: true` is set, the redirect is thrown instead of
+* returned. When an absolute `href` is supplied and `reloadDocument` is not
+* set, a full-document navigation is inferred.
+*
+* @param opts Options for the redirect. Common fields:
+* - `href`: absolute URL for external redirects; infers `reloadDocument`.
+* - `statusCode`: HTTP status code to use (defaults to 307).
+* - `headers`: additional headers to include on the Response.
+* - Standard navigation options like `to`, `params`, `search`, `replace`,
+*   and `reloadDocument` for internal redirects.
+* @returns A Response augmented with router navigation options.
+* @link https://tanstack.com/router/latest/docs/framework/react/api/router/redirectFunction
+*/
+function redirect(opts) {
+	opts.statusCode = opts.statusCode || opts.code || 307;
+	if (!opts._builtLocation && !opts.reloadDocument && typeof opts.href === "string") try {
+		new URL(opts.href);
+		opts.reloadDocument = true;
+	} catch {}
+	const headers = new Headers(opts.headers);
+	if (opts.href && headers.get("Location") === null) headers.set("Location", opts.href);
+	const response = new Response(null, {
+		status: opts.statusCode,
+		headers
+	});
+	response.options = opts;
+	if (opts.throw) throw response;
+	return response;
+}
 /** Check whether a value is a TanStack Router redirect Response. */
 /** Check whether a value is a TanStack Router redirect Response. */
-function isRedirect(obj) {
+function isRedirect$1(obj) {
 	return obj instanceof Response && !!obj.options;
 }
 /** True if value is a redirect with a resolved `href` location. */
 /** True if value is a redirect with a resolved `href` location. */
 function isResolvedRedirect(obj) {
-	return isRedirect(obj) && !!obj.options.href;
+	return isRedirect$1(obj) && !!obj.options.href;
+}
+/** Parse a serialized redirect object back into a redirect Response. */
+/** Parse a serialized redirect object back into a redirect Response. */
+function parseRedirect(obj) {
+	if (obj !== null && typeof obj === "object" && obj.isSerializedRedirect) return redirect(obj);
 }
 //#endregion
 //#region node_modules/.pnpm/@tanstack+router-core@1.171.13/node_modules/@tanstack/router-core/dist/esm/rewrite.js
@@ -3413,7 +3451,7 @@ var defaultSerovalPlugins = [
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-B0QdbY_e.js");
+	const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-TA_TNy62.js");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -3434,7 +3472,52 @@ async function getStartManifest(matchedRoutes) {
 }
 //#endregion
 //#region \0%23tanstack-start-server-fn-resolver
-var manifest = {};
+var manifest = {
+	"03267021997fe8b81778897ed57018438567f388aa36548b9760419a1b27bba8": {
+		functionName: "updateEnrollmentFn_createServerFn_handler",
+		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	},
+	"0f0e386ebc16799934abdd675f0cef8b81c184541d3f9717ad099feaa227ac71": {
+		functionName: "addCaseworkerAssignmentFn_createServerFn_handler",
+		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	},
+	"1ffbb6f5a833872a182ca20f9e4125a50d2a009599e7e9ea2b5c8cc4676bb3c7": {
+		functionName: "setPrimaryCaseworkerFn_createServerFn_handler",
+		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	},
+	"3a459a481b7ab66e402f438e1afa46262cfae7798ac7a113a8c8f9455a2dbd65": {
+		functionName: "editNoteFn_createServerFn_handler",
+		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	},
+	"3e25d0d70b2beb7f08c20406aae45d51e18c27f4aca2f3b9a594bb6b3a9864bb": {
+		functionName: "addNoteFn_createServerFn_handler",
+		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	},
+	"43f95cfa997fdcb3a90fdd6294a5d1e9a6b7f636a06f04d4aff88769d5aed5cb": {
+		functionName: "removeCaseworkerAssignmentFn_createServerFn_handler",
+		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	},
+	"4cf149594f1f4f229810c3b7e475b235adb431a211a213ab6816cad471b968b8": {
+		functionName: "addConcreteServiceFn_createServerFn_handler",
+		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	},
+	"a26945d43bdbc8df6e4f7021151a52b1797575133c243584ed9c61481939ed8d": {
+		functionName: "updateIntakeFieldFn_createServerFn_handler",
+		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	},
+	"b64422fd99df7ca444097916df9212b4f27a5202131063ccafb4de124a8e6325": {
+		functionName: "loadWorkspaceFn_createServerFn_handler",
+		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	},
+	"c654da9399de90f4e64cc1048c973787ed8ebc98935346ca79f049407b24770a": {
+		functionName: "createCaseFromIntakeFn_createServerFn_handler",
+		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	},
+	"e8c88b6594bea7184bf006577c6a9dd5d7beffa5473ec5e34f8de086b0df3ecf": {
+		functionName: "updateCaseStatusFn_createServerFn_handler",
+		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	}
+};
 async function getServerFnById(id, access) {
 	const serverFnInfo = manifest[id];
 	if (!serverFnInfo) throw new Error("Server function info not found for " + id);
@@ -3448,6 +3531,7 @@ async function getServerFnById(id, access) {
 //#region node_modules/.pnpm/@tanstack+start-client-core@1.170.12/node_modules/@tanstack/start-client-core/dist/esm/constants.js
 var TSS_FORMDATA_CONTEXT = "__TSS_CONTEXT";
 var TSS_SERVER_FUNCTION = Symbol.for("TSS_SERVER_FUNCTION");
+var TSS_SERVER_FUNCTION_FACTORY = Symbol.for("TSS_SERVER_FUNCTION_FACTORY");
 var X_TSS_SERIALIZED = "x-tss-serialized";
 var X_TSS_RAW_RESPONSE = "x-tss-raw";
 /** Content-Type for multiplexed framed responses (RawStream support) */
@@ -3511,6 +3595,9 @@ function getStartContext(opts) {
 //#endregion
 //#region node_modules/.pnpm/@tanstack+start-client-core@1.170.12/node_modules/@tanstack/start-client-core/dist/esm/getStartOptions.js
 var getStartOptions = () => getStartContext().startOptions;
+//#endregion
+//#region node_modules/.pnpm/@tanstack+start-client-core@1.170.12/node_modules/@tanstack/start-client-core/dist/esm/getStartContextServerOnly.js
+var getStartContextServerOnly = getStartContext;
 //#endregion
 //#region node_modules/.pnpm/cookie-es@3.1.1/node_modules/cookie-es/dist/index.mjs
 function splitSetCookieString(cookiesString) {
@@ -3578,6 +3665,150 @@ function dehydrateSsrMatchId(id) {
 }
 //#endregion
 //#region node_modules/.pnpm/@tanstack+start-client-core@1.170.12/node_modules/@tanstack/start-client-core/dist/esm/createServerFn.js
+var createServerFn = (options, __opts) => {
+	const resolvedOptions = __opts || options || {};
+	if (typeof resolvedOptions.method === "undefined") resolvedOptions.method = "GET";
+	const setValidator = (validator) => {
+		return createServerFn(void 0, {
+			...resolvedOptions,
+			validator,
+			inputValidator: validator
+		});
+	};
+	const res = {
+		options: resolvedOptions,
+		middleware: (middleware) => {
+			const newMiddleware = [...resolvedOptions.middleware || []];
+			middleware.map((m) => {
+				if (TSS_SERVER_FUNCTION_FACTORY in m) {
+					if (m.options.middleware) newMiddleware.push(...m.options.middleware);
+				} else newMiddleware.push(m);
+			});
+			const res = createServerFn(void 0, {
+				...resolvedOptions,
+				middleware: newMiddleware
+			});
+			res[TSS_SERVER_FUNCTION_FACTORY] = true;
+			return res;
+		},
+		validator: setValidator,
+		inputValidator: setValidator,
+		handler: (...args) => {
+			const [extractedFn, serverFn] = args;
+			const newOptions = {
+				...resolvedOptions,
+				extractedFn,
+				serverFn
+			};
+			const resolvedMiddleware = [...newOptions.middleware || [], serverFnBaseToMiddleware(newOptions)];
+			extractedFn.method = resolvedOptions.method;
+			return Object.assign(async (opts) => {
+				const result = await executeMiddleware$1(resolvedMiddleware, "client", {
+					...extractedFn,
+					...newOptions,
+					data: opts?.data,
+					headers: opts?.headers,
+					signal: opts?.signal,
+					fetch: opts?.fetch,
+					context: createNullProtoObject()
+				});
+				const redirect = parseRedirect(result.error);
+				if (redirect) throw redirect;
+				if (result.error) throw result.error;
+				return result.result;
+			}, {
+				...extractedFn,
+				method: resolvedOptions.method,
+				__executeServer: async (opts) => {
+					const startContext = getStartContextServerOnly();
+					const serverContextAfterGlobalMiddlewares = startContext.contextAfterGlobalMiddlewares;
+					return await executeMiddleware$1(resolvedMiddleware, "server", {
+						...extractedFn,
+						...opts,
+						serverFnMeta: extractedFn.serverFnMeta,
+						context: safeObjectMerge(opts.context, serverContextAfterGlobalMiddlewares),
+						request: startContext.request
+					}).then((d) => ({
+						result: d.result,
+						error: d.error,
+						context: d.sendContext
+					}));
+				}
+			});
+		}
+	};
+	const fun = (options) => {
+		return createServerFn(void 0, {
+			...resolvedOptions,
+			...options
+		});
+	};
+	return Object.assign(fun, res);
+};
+async function executeMiddleware$1(middlewares, env, opts) {
+	let flattenedMiddlewares = flattenMiddlewares([...getStartOptions()?.functionMiddleware || [], ...middlewares]);
+	if (env === "server") {
+		const startContext = getStartContextServerOnly({ throwIfNotFound: false });
+		if (startContext?.executedRequestMiddlewares) flattenedMiddlewares = flattenedMiddlewares.filter((m) => !startContext.executedRequestMiddlewares.has(m));
+	}
+	const callNextMiddleware = async (ctx) => {
+		const nextMiddleware = flattenedMiddlewares.shift();
+		if (!nextMiddleware) return ctx;
+		try {
+			let validator = "validator" in nextMiddleware.options ? nextMiddleware.options.validator : void 0;
+			if (!validator && "inputValidator" in nextMiddleware.options) validator = nextMiddleware.options.inputValidator;
+			if (validator && env === "server") ctx.data = await execValidator(validator, ctx.data);
+			let middlewareFn = void 0;
+			if (env === "client") {
+				if ("client" in nextMiddleware.options) middlewareFn = nextMiddleware.options.client;
+			} else if ("server" in nextMiddleware.options) middlewareFn = nextMiddleware.options.server;
+			if (middlewareFn) {
+				const userNext = async (userCtx = {}) => {
+					const result = await callNextMiddleware({
+						...ctx,
+						...userCtx,
+						context: safeObjectMerge(ctx.context, userCtx.context),
+						sendContext: safeObjectMerge(ctx.sendContext, userCtx.sendContext),
+						headers: mergeHeaders(ctx.headers, userCtx.headers),
+						_callSiteFetch: ctx._callSiteFetch,
+						fetch: ctx._callSiteFetch ?? userCtx.fetch ?? ctx.fetch,
+						result: userCtx.result !== void 0 ? userCtx.result : userCtx instanceof Response ? userCtx : ctx.result,
+						error: userCtx.error ?? ctx.error
+					});
+					if (result.error) throw result.error;
+					return result;
+				};
+				const result = await middlewareFn({
+					...ctx,
+					next: userNext
+				});
+				if (isRedirect$1(result)) return {
+					...ctx,
+					error: result
+				};
+				if (result instanceof Response) return {
+					...ctx,
+					result
+				};
+				if (!result) throw new Error("User middleware returned undefined. You must call next() or return a result in your middlewares.");
+				return result;
+			}
+			return callNextMiddleware(ctx);
+		} catch (error) {
+			return {
+				...ctx,
+				error
+			};
+		}
+	};
+	return callNextMiddleware({
+		...opts,
+		headers: opts.headers || {},
+		sendContext: opts.sendContext || {},
+		context: opts.context || createNullProtoObject(),
+		_callSiteFetch: opts.fetch
+	});
+}
 function flattenMiddlewares(middlewares, maxDepth = 100) {
 	const seen = /* @__PURE__ */ new Set();
 	const flattened = [];
@@ -3593,6 +3824,40 @@ function flattenMiddlewares(middlewares, maxDepth = 100) {
 	};
 	recurse(middlewares, 0);
 	return flattened;
+}
+async function execValidator(validator, input) {
+	if (validator == null) return {};
+	if ("~standard" in validator) {
+		const result = await validator["~standard"].validate(input);
+		if (result.issues) throw new Error(JSON.stringify(result.issues, void 0, 2));
+		return result.value;
+	}
+	if ("parse" in validator) return validator.parse(input);
+	if (typeof validator === "function") return validator(input);
+	throw new Error("Invalid validator type!");
+}
+function serverFnBaseToMiddleware(options) {
+	return {
+		"~types": void 0,
+		options: {
+			inputValidator: options.validator ?? options.inputValidator,
+			client: async ({ next, sendContext, fetch, ...ctx }) => {
+				const payload = {
+					...ctx,
+					context: sendContext,
+					fetch
+				};
+				return next(await options.extractedFn?.(payload));
+			},
+			server: async ({ next, ...ctx }) => {
+				const result = await options.serverFn?.(ctx);
+				return next({
+					...ctx,
+					result
+				});
+			}
+		}
+	};
 }
 //#endregion
 //#region node_modules/.pnpm/@tanstack+start-client-core@1.170.12/node_modules/@tanstack/start-client-core/dist/esm/createMiddleware.js
@@ -3901,7 +4166,7 @@ var handleServerAction = async ({ request, context, serverFnId }) => {
 			if (isNotFound(res)) res = isNotFoundResponse(res);
 			if (!isServerFn) return unwrapped;
 			if (unwrapped instanceof Response) {
-				if (isRedirect(unwrapped)) return unwrapped;
+				if (isRedirect$1(unwrapped)) return unwrapped;
 				unwrapped.headers.set(X_TSS_RAW_RESPONSE, "true");
 				return unwrapped;
 			}
@@ -5128,7 +5393,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./assets/router-DjL8d9bH.js"),
+		import("./assets/router-DGdHIUkd.js"),
 		import("./assets/start-AdjGxi1V.js"),
 		import("./assets/empty-plugin-adapters-32W6gJO6.js")
 	]);
@@ -5159,7 +5424,7 @@ function throwIfMayNotDefer() {
 * Check if a value is a special response (Response or Redirect)
 */
 function isSpecialResponse(value) {
-	return value instanceof Response || isRedirect(value);
+	return value instanceof Response || isRedirect$1(value);
 }
 /**
 * Normalize middleware result to context shape
@@ -5437,7 +5702,7 @@ function createStartHandler(cbOrOptions) {
 }
 async function handleRedirectResponse(response, request, getRouter) {
 	const ssrResponse = normalizeSsrResponse(response);
-	if (!isRedirect(ssrResponse.response)) return ssrResponse;
+	if (!isRedirect$1(ssrResponse.response)) return ssrResponse;
 	if (isResolvedRedirect(ssrResponse.response)) {
 		if (request.headers.get("x-tsr-serverFn") === "true") return replaceSsrResponse(ssrResponse, Response.json({
 			...ssrResponse.response.options,
@@ -5515,4 +5780,4 @@ function createServerEntry(entry) {
 }
 var server_default = createServerEntry({ fetch: fetch$1 });
 //#endregion
-export { createServerEntry, server_default as default };
+export { createServerEntry, server_default as default, TSS_SERVER_FUNCTION as n, getServerFnById as r, createServerFn as t };
