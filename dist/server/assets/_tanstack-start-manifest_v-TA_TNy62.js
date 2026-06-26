@@ -8,78 +8,78 @@ var tsrStartManifest = () => ({ routes: {
 			"/intake",
 			"/reports"
 		],
-		css: ["/assets/index-D_Y7v5Es.css"],
+		css: ["/assets/index-l7G_-dHO.css"],
 		preloads: [
-			"/assets/index-CTrIm2s7.js",
+			"/assets/index-CdbARCiN.js",
 			"/assets/useRouter-CNjUR3Cg.js",
-			"/assets/useDemoWorkspace-doqsxGBB.js"
+			"/assets/useDemoWorkspace-BL46wjgm.js"
 		],
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-CTrIm2s7.js"
+			src: "/assets/index-CdbARCiN.js"
 		} }]
 	},
 	"/": {
 		filePath: "C:/Users/david/Documents/code-projects/frc-caseworks/src/routes/index.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/routes-n7SFcrXW.js",
-			"/assets/Table-BER6mThp.js",
-			"/assets/SimpleGrid-jk1YWF70.js",
-			"/assets/dollar-sign-C9ucthTq.js",
-			"/assets/CaseworkUI-cEZ_-UFU.js"
+			"/assets/routes-C4a7vATk.js",
+			"/assets/Table-D1MhuMaK.js",
+			"/assets/SimpleGrid-D5pIFw4Q.js",
+			"/assets/dollar-sign-DepKOi93.js",
+			"/assets/CaseworkUI-Cpr7M1sO.js"
 		]
 	},
 	"/cases": {
 		filePath: "C:/Users/david/Documents/code-projects/frc-caseworks/src/routes/cases/route.tsx",
 		children: ["/cases/$caseId", "/cases/"],
-		preloads: ["/assets/route-DCOwy2SI.js"]
+		preloads: ["/assets/route-BKk6Nt6D.js"]
 	},
 	"/intake": {
 		filePath: "C:/Users/david/Documents/code-projects/frc-caseworks/src/routes/intake.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/intake-DYjbQOVX.js",
-			"/assets/Table-BER6mThp.js",
-			"/assets/Tabs-D4zGT13B.js",
-			"/assets/TextInput-gcDAF3Be.js",
+			"/assets/intake-BhyRVDud.js",
+			"/assets/Table-D1MhuMaK.js",
+			"/assets/Tabs-BLwLbK65.js",
+			"/assets/TextInput-Cw_1EPJa.js",
 			"/assets/get-base-value-BuqEGh75.js",
-			"/assets/search-DKoXZ_x5.js"
+			"/assets/search-CVn6M27w.js"
 		]
 	},
 	"/reports": {
 		filePath: "C:/Users/david/Documents/code-projects/frc-caseworks/src/routes/reports.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/reports-B8Q97J_p.js",
-			"/assets/Table-BER6mThp.js",
-			"/assets/SimpleGrid-jk1YWF70.js",
-			"/assets/CaseworkUI-cEZ_-UFU.js"
+			"/assets/reports-DmLppakQ.js",
+			"/assets/Table-D1MhuMaK.js",
+			"/assets/SimpleGrid-D5pIFw4Q.js",
+			"/assets/CaseworkUI-Cpr7M1sO.js"
 		]
 	},
 	"/cases/$caseId": {
 		filePath: "C:/Users/david/Documents/code-projects/frc-caseworks/src/routes/cases/$caseId.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/_caseId-DsjcPwJO.js",
-			"/assets/Table-BER6mThp.js",
-			"/assets/Tabs-D4zGT13B.js",
-			"/assets/SimpleGrid-jk1YWF70.js",
-			"/assets/TextInput-gcDAF3Be.js",
-			"/assets/dollar-sign-C9ucthTq.js",
-			"/assets/CaseworkUI-cEZ_-UFU.js"
+			"/assets/_caseId-6UIveBhH.js",
+			"/assets/Table-D1MhuMaK.js",
+			"/assets/Tabs-BLwLbK65.js",
+			"/assets/SimpleGrid-D5pIFw4Q.js",
+			"/assets/TextInput-Cw_1EPJa.js",
+			"/assets/dollar-sign-DepKOi93.js",
+			"/assets/CaseworkUI-Cpr7M1sO.js"
 		]
 	},
 	"/cases/": {
 		filePath: "C:/Users/david/Documents/code-projects/frc-caseworks/src/routes/cases/index.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/cases-Bc2GuTVW.js",
-			"/assets/Table-BER6mThp.js",
-			"/assets/TextInput-gcDAF3Be.js",
-			"/assets/search-DKoXZ_x5.js",
-			"/assets/CaseworkUI-cEZ_-UFU.js"
+			"/assets/cases-6gjikIDl.js",
+			"/assets/Table-D1MhuMaK.js",
+			"/assets/TextInput-Cw_1EPJa.js",
+			"/assets/search-CVn6M27w.js",
+			"/assets/CaseworkUI-Cpr7M1sO.js"
 		]
 	}
 } });

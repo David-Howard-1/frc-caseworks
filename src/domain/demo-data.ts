@@ -91,6 +91,7 @@ export type IntakeSubmission = {
     lastName: string
     preferredName?: string
     dateOfBirth?: string
+    ssn?: string
     approximateAge?: string
     phone?: string
     alternatePhone?: string

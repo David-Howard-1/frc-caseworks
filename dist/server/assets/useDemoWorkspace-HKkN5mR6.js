@@ -58,6 +58,7 @@ var roleDefaults = {
 };
 var normalize = (value) => value?.trim().toLowerCase() ?? "";
 var normalizePhone = (value) => value?.replace(/\D/g, "") ?? "";
+var normalizeSsn = (value) => value?.replace(/\D/g, "") ?? "";
 var DemoWorkspaceContext = createContext(null);
 function DemoWorkspaceProvider({ children, initialSnapshot = initialWorkspaceSnapshot }) {
 	const loadWorkspace = useServerFn(loadWorkspaceFn);
@@ -218,7 +219,8 @@ function DemoWorkspaceProvider({ children, initialSnapshot = initialWorkspaceSna
 		const lastName = normalize(input.lastName);
 		const phone = normalizePhone(input.phone);
 		const email = normalize(input.email);
-		if (!firstName && !lastName && !phone && !email && !input.dateOfBirth) return [];
+		const ssn = normalizeSsn(input.ssn);
+		if (!firstName && !lastName && !phone && !email && !input.dateOfBirth && !ssn) return [];
 		const caseMatches = cases.reduce((matches, caseRecord) => {
 			const [caseFirstName = "", ...rest] = caseRecord.displayName.split(" ");
 			const caseLastName = rest.at(-1) ?? "";
@@ -246,7 +248,9 @@ function DemoWorkspaceProvider({ children, initialSnapshot = initialWorkspaceSna
 		}, []);
 		const intakeMatches = intakeSubmissions.filter((submission) => submission.status !== "Converted to Case").reduce((matches, submission) => {
 			const exactContact = phone && normalizePhone(submission.client.phone) === phone || email && normalize(submission.client.email) === email;
-			if (!(firstName && normalize(submission.client.firstName).startsWith(firstName) || lastName && normalize(submission.client.lastName).startsWith(lastName)) && !exactContact) return matches;
+			const exactSsn = ssn && normalizeSsn(submission.client.ssn) === ssn;
+			const exactIdentity = input.dateOfBirth && submission.client.dateOfBirth === input.dateOfBirth || exactSsn;
+			if (!(firstName && normalize(submission.client.firstName).startsWith(firstName) || lastName && normalize(submission.client.lastName).startsWith(lastName)) && !exactContact && !exactIdentity) return matches;
 			matches.push({
 				id: submission.id,
 				recordType: "Intake",
@@ -257,7 +261,7 @@ function DemoWorkspaceProvider({ children, initialSnapshot = initialWorkspaceSna
 				programArea: "Draft intake",
 				lastUpdated: submission.savedAt ?? submission.startedAt,
 				assignedStaff: staff.find((person) => person.id === submission.createdById)?.name,
-				strength: exactContact ? "High confidence" : "Medium confidence"
+				strength: exactContact || exactSsn ? "High confidence" : "Medium confidence"
 			});
 			return matches;
 		}, []);

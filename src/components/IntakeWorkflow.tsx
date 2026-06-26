@@ -14,10 +14,19 @@ import {
 	Text,
 	TextInput,
 	Textarea,
+	ThemeIcon,
 	Title,
 } from "@mantine/core";
 import { useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, Check, FilePlus2, Search } from "lucide-react";
+import {
+	AlertTriangle,
+	Check,
+	FilePlus2,
+	Info,
+	RotateCcw,
+	Search,
+	UserPlus,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 import type {
@@ -60,9 +69,9 @@ const benefitOptions = [
 ];
 
 type SearchInput = {
-	firstName: string;
-	lastName: string;
+	name: string;
 	dateOfBirth: string;
+	ssn: string;
 	phone: string;
 	email: string;
 };
@@ -167,18 +176,27 @@ const emptyForm: IntakeFormState = {
 	overrideReason: "",
 };
 
+function splitLookupName(name: string) {
+	const parts = name.trim().split(/\s+/).filter(Boolean);
+	const firstName = parts[0] ?? "";
+	const lastName = parts.length > 1 ? parts.slice(1).join(" ") : "";
+
+	return { firstName, lastName };
+}
+
 export function IntakeWorkflow() {
 	const { createCaseFromIntake, currentStaffId, findIntakeMatches } =
 		useDemoWorkspace();
 	const navigate = useNavigate();
 	const [searchInput, setSearchInput] = useState<SearchInput>({
-		firstName: "",
-		lastName: "",
+		name: "",
 		dateOfBirth: "",
+		ssn: "",
 		phone: "",
 		email: "",
 	});
 	const [hasSearched, setHasSearched] = useState(false);
+	const [intakeStarted, setIntakeStarted] = useState(false);
 	const [form, setForm] = useState<IntakeFormState>(emptyForm);
 	const [incomeSources, setIncomeSources] = useState<IntakeIncomeSource[]>(
 		[],
@@ -188,7 +206,22 @@ export function IntakeWorkflow() {
 	const [error, setError] = useState("");
 
 	const matches = useMemo(
-		() => (hasSearched ? findIntakeMatches(searchInput) : []),
+		() => {
+			if (!hasSearched) {
+				return [];
+			}
+
+			const { firstName, lastName } = splitLookupName(searchInput.name);
+
+			return findIntakeMatches({
+				firstName,
+				lastName,
+				dateOfBirth: searchInput.dateOfBirth,
+				phone: searchInput.phone,
+				email: searchInput.email,
+				ssn: searchInput.ssn,
+			});
+		},
 		[findIntakeMatches, hasSearched, searchInput],
 	);
 
@@ -204,6 +237,21 @@ export function IntakeWorkflow() {
 			const { value } = event.currentTarget;
 			setSearchInput((current) => ({ ...current, [field]: value }));
 		};
+	}
+
+	function clearSearch() {
+		setSearchInput({
+			name: "",
+			dateOfBirth: "",
+			ssn: "",
+			phone: "",
+			email: "",
+		});
+		setHasSearched(false);
+	}
+
+	function continueWithNewPerson() {
+		setIntakeStarted(true);
 	}
 
 	function handleTextFormField(field: keyof IntakeFormState) {
@@ -293,10 +341,11 @@ export function IntakeWorkflow() {
 	}
 
 	function saveIntake() {
+		const { firstName, lastName } = splitLookupName(searchInput.name);
 		const hasContact = Boolean(searchInput.phone || searchInput.email);
 		const missingCore =
-			!searchInput.firstName.trim() ||
-			!searchInput.lastName.trim() ||
+			!firstName.trim() ||
+			!lastName.trim() ||
 			(!searchInput.dateOfBirth && !form.approximateAge.trim()) ||
 			!hasContact ||
 			!form.housingStatus;
@@ -320,11 +369,12 @@ export function IntakeWorkflow() {
 			duplicateWarnings,
 			duplicateOverrideReason: form.overrideReason || undefined,
 			client: {
-				firstName: searchInput.firstName,
+				firstName,
 				middleName: form.middleName,
-				lastName: searchInput.lastName,
+				lastName,
 				preferredName: form.preferredName,
 				dateOfBirth: searchInput.dateOfBirth,
+				ssn: searchInput.ssn,
 				approximateAge: form.approximateAge,
 				phone: searchInput.phone,
 				alternatePhone: form.alternatePhone,
@@ -397,11 +447,11 @@ export function IntakeWorkflow() {
 						Intake
 					</Text>
 					<Title order={1} size='h2'>
-						New Intake Workflow
+						New Intake
 					</Title>
 					<Text c='dimmed' mt={4}>
-						Search first, review possible matches, then convert a
-						completed intake into a case.
+						Check for an existing person before starting a new
+						intake record.
 					</Text>
 				</Box>
 				<Button leftSection={<Check size={17} />} onClick={saveIntake}>
@@ -415,146 +465,262 @@ export function IntakeWorkflow() {
 				</Alert>
 			) : null}
 
-			<Box className='rounded-md border border-slate-200 bg-white p-4 shadow-sm'>
-				<Group align='flex-end'>
-					<TextInput
-						label='First Name'
-						onChange={handleSearchField("firstName")}
-						required
-						value={searchInput.firstName}
-					/>
-					<TextInput
-						label='Last Name'
-						onChange={handleSearchField("lastName")}
-						required
-						value={searchInput.lastName}
-					/>
-					<TextInput
-						label='Date of Birth'
-						onChange={handleSearchField("dateOfBirth")}
-						placeholder='YYYY-MM-DD'
-						value={searchInput.dateOfBirth}
-					/>
-					<TextInput
-						label='Phone'
-						onChange={handleSearchField("phone")}
-						value={searchInput.phone}
-					/>
-					<TextInput
-						label='Email'
-						onChange={handleSearchField("email")}
-						value={searchInput.email}
-					/>
-					<Button
-						leftSection={<Search size={16} />}
-						onClick={() => setHasSearched(true)}
-					>
-						Check matches
-					</Button>
+			<Box className='rounded-md border border-slate-200 bg-white p-5 shadow-sm'>
+				<Group align='flex-start' justify='space-between'>
+					<Box>
+						<Group gap='sm'>
+							<ThemeIcon color='frcBlue' radius={6} variant='light'>
+								<Search size={18} />
+							</ThemeIcon>
+							<Box>
+								<Title order={2} size='h4'>
+									Step 1: Search for Potential Matches
+								</Title>
+								<Text c='dimmed' size='sm'>
+									Look up people by name, DOB, SSN, phone, or
+									email before beginning the intake.
+								</Text>
+							</Box>
+						</Group>
+					</Box>
+					<Box className='max-w-sm rounded-md bg-slate-50 p-3'>
+						<Group align='flex-start' gap='sm' wrap='nowrap'>
+							<Info size={18} className='mt-0.5 text-[#1C5380]' />
+							<Text c='dimmed' size='sm'>
+								Search includes existing cases and unfinished
+								intake drafts in this workspace.
+							</Text>
+						</Group>
+					</Box>
 				</Group>
 
-				{hasSearched ? (
-					matches.length > 0 ? (
-						<Stack mt='md'>
-							<Alert
-								color='yellow'
-								icon={<AlertTriangle size={18} />}
+				<Grid align='flex-end' mt='md'>
+					<Grid.Col span={{ base: 12, md: 4 }}>
+						<TextInput
+							leftSection={<Search size={16} />}
+							label='Name'
+							onChange={handleSearchField("name")}
+							placeholder='First and last name'
+							value={searchInput.name}
+						/>
+					</Grid.Col>
+					<Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+						<TextInput
+							label='Date of birth'
+							onChange={handleSearchField("dateOfBirth")}
+							placeholder='YYYY-MM-DD'
+							value={searchInput.dateOfBirth}
+						/>
+					</Grid.Col>
+					<Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+						<TextInput
+							label='SSN'
+							onChange={handleSearchField("ssn")}
+							placeholder='Last 4 or full SSN'
+							value={searchInput.ssn}
+						/>
+					</Grid.Col>
+					<Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+						<TextInput
+							label='Phone'
+							onChange={handleSearchField("phone")}
+							placeholder='(555) 555-5555'
+							value={searchInput.phone}
+						/>
+					</Grid.Col>
+					<Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+						<TextInput
+							label='Email'
+							onChange={handleSearchField("email")}
+							placeholder='name@example.org'
+							value={searchInput.email}
+						/>
+					</Grid.Col>
+					<Grid.Col span={12}>
+						<Group justify='space-between'>
+							<Group>
+								<Button
+									leftSection={<Search size={16} />}
+									onClick={() => setHasSearched(true)}
+								>
+									Search
+								</Button>
+								<Button
+									leftSection={<RotateCcw size={16} />}
+									onClick={clearSearch}
+									variant='subtle'
+								>
+									Clear
+								</Button>
+							</Group>
+							<Button
+								leftSection={<UserPlus size={17} />}
+								onClick={continueWithNewPerson}
+								variant={intakeStarted ? "light" : "outline"}
 							>
-								Possible existing records found. Review these
-								before creating a new intake.
-							</Alert>
-							<Table.ScrollContainer minWidth={860}>
-								<Table verticalSpacing='sm'>
-									<Table.Thead>
-										<Table.Tr>
-											<Table.Th>Client</Table.Th>
-											<Table.Th>Record</Table.Th>
-											<Table.Th>Status</Table.Th>
-											<Table.Th>Program area</Table.Th>
-											<Table.Th>Last updated</Table.Th>
-											<Table.Th>Assigned staff</Table.Th>
-											<Table.Th>Match</Table.Th>
-										</Table.Tr>
-									</Table.Thead>
-									<Table.Tbody>
-										{matches.map((match) => (
-											<Table.Tr
-												key={`${match.recordType}-${match.id}`}
-											>
-												<Table.Td>
-													<Text fw={700}>
-														{match.clientName}
-													</Text>
-													<Text c='dimmed' size='sm'>
-														{[
-															match.phone,
-															match.email,
-														]
-															.filter(Boolean)
-															.join(" - ")}
-													</Text>
-												</Table.Td>
-												<Table.Td>
-													{match.recordType}
-												</Table.Td>
-												<Table.Td>
-													{match.caseStatus ??
-														"Draft"}
-												</Table.Td>
-												<Table.Td>
-													{match.programArea}
-												</Table.Td>
-												<Table.Td>
-													{formatDate(
-														match.lastUpdated.slice(
-															0,
-															10,
-														),
-													)}
-												</Table.Td>
-												<Table.Td>
-													{match.assignedStaff ??
-														"Unassigned"}
-												</Table.Td>
-												<Table.Td>
-													<Badge
-														color={
-															match.strength.startsWith(
-																"High",
-															)
-																? "red"
-																: "yellow"
-														}
-													>
-														{match.strength}
-													</Badge>
-												</Table.Td>
+								Continue with New Person
+							</Button>
+						</Group>
+					</Grid.Col>
+				</Grid>
+
+				<Box mt='lg'>
+					<Group justify='space-between' mb='xs'>
+						<Text fw={700}>Potential Matches</Text>
+						{hasSearched ? (
+							<Badge color={matches.length > 0 ? "yellow" : "green"}>
+								{matches.length} found
+							</Badge>
+						) : null}
+					</Group>
+
+					{hasSearched ? (
+						matches.length > 0 ? (
+							<Stack>
+								<Alert
+									color='yellow'
+									icon={<AlertTriangle size={18} />}
+								>
+									Possible existing records found. Review these
+									before creating a new intake.
+								</Alert>
+								<Table.ScrollContainer minWidth={900}>
+									<Table verticalSpacing='sm'>
+										<Table.Thead>
+											<Table.Tr>
+												<Table.Th>Name</Table.Th>
+												<Table.Th>Phone / Email</Table.Th>
+												<Table.Th>Record</Table.Th>
+												<Table.Th>Status</Table.Th>
+												<Table.Th>Program area</Table.Th>
+												<Table.Th>Last updated</Table.Th>
+												<Table.Th>Match</Table.Th>
+												<Table.Th>Action</Table.Th>
 											</Table.Tr>
-										))}
-									</Table.Tbody>
-								</Table>
-							</Table.ScrollContainer>
-							<Textarea
-								label='Duplicate override note'
-								onChange={handleTextFormField("overrideReason")}
-								placeholder='Reason for creating a new intake anyway'
-								value={form.overrideReason}
-							/>
-						</Stack>
+										</Table.Thead>
+										<Table.Tbody>
+											{matches.map((match) => (
+												<Table.Tr
+													key={`${match.recordType}-${match.id}`}
+												>
+													<Table.Td>
+														<Text fw={700}>
+															{match.clientName}
+														</Text>
+														<Text c='dimmed' size='sm'>
+															{match.dateOfBirth
+																? `DOB ${formatDate(match.dateOfBirth)}`
+																: "DOB not recorded"}
+														</Text>
+													</Table.Td>
+													<Table.Td>
+														<Text size='sm'>
+															{match.phone ?? "No phone"}
+														</Text>
+														<Text c='dimmed' size='sm'>
+															{match.email ?? "No email"}
+														</Text>
+													</Table.Td>
+													<Table.Td>
+														{match.recordType}
+													</Table.Td>
+													<Table.Td>
+														{match.caseStatus ??
+															"Draft"}
+													</Table.Td>
+													<Table.Td>
+														{match.programArea}
+													</Table.Td>
+													<Table.Td>
+														{formatDate(
+															match.lastUpdated.slice(
+																0,
+																10,
+															),
+														)}
+													</Table.Td>
+													<Table.Td>
+														<Badge
+															color={
+																match.strength.startsWith(
+																	"High",
+																)
+																	? "red"
+																	: "yellow"
+															}
+														>
+															{match.strength}
+														</Badge>
+													</Table.Td>
+													<Table.Td>
+														<Button size='xs' variant='light'>
+															View
+														</Button>
+													</Table.Td>
+												</Table.Tr>
+											))}
+										</Table.Tbody>
+									</Table>
+								</Table.ScrollContainer>
+								<Textarea
+									label='Duplicate override note'
+									onChange={handleTextFormField("overrideReason")}
+									placeholder='Reason for creating a new intake anyway'
+									value={form.overrideReason}
+								/>
+							</Stack>
+						) : (
+							<Alert
+								color='green'
+								icon={<FilePlus2 size={18} />}
+							>
+								No matching clients, intakes, or cases were found.
+								Continue creating a new intake.
+							</Alert>
+						)
 					) : (
-						<Alert
-							color='green'
-							icon={<FilePlus2 size={18} />}
-							mt='md'
-						>
-							No matching clients, intakes, or cases were found.
-							Continue creating a new intake.
-						</Alert>
-					)
-				) : null}
+						<Box className='rounded-md border border-dashed border-slate-300 bg-slate-50 p-5 text-center'>
+							<Text c='dimmed' fw={700}>
+								Run a search to see potential matches.
+							</Text>
+						</Box>
+					)}
+				</Box>
 			</Box>
 
-			<Box className='rounded-md border border-slate-200 bg-white p-4 shadow-sm'>
+			<Divider
+				label='Begin a new intake below'
+				labelPosition='center'
+				my='xs'
+			/>
+
+			<Box className='rounded-md border border-slate-200 bg-white p-5 shadow-sm'>
+				<Group align='flex-start' justify='space-between' mb='md'>
+					<Box>
+						<Group gap='sm'>
+							<ThemeIcon color='green' radius={6} variant='light'>
+								<UserPlus size={18} />
+							</ThemeIcon>
+							<Box>
+								<Title order={2} size='h4'>
+									Step 2: Begin New Intake
+								</Title>
+								<Text c='dimmed' size='sm'>
+									Complete the intake details for the person
+									you are adding.
+								</Text>
+							</Box>
+						</Group>
+					</Box>
+					{intakeStarted ? (
+						<Badge color='green'>New person selected</Badge>
+					) : (
+						<Badge color='gray' variant='light'>
+							Awaiting lookup
+						</Badge>
+					)}
+				</Group>
+
 				<Tabs defaultValue='client'>
 					<Tabs.List>
 						<Tabs.Tab value='client'>Client</Tabs.Tab>

@@ -1,11 +1,24 @@
-import { Badge, Box, Button, Group, SimpleGrid, Tabs, Text, Title } from "@mantine/core";
+import {
+	Badge,
+	Box,
+	Button,
+	Group,
+	Stack,
+	Tabs,
+	Text,
+	Title,
+} from "@mantine/core";
 import { ClipboardList, DollarSign, FileText } from "lucide-react";
 import type {
 	CaseProgramEnrollment,
 	ClientCase,
 	Program,
 } from "~/domain/demo-data";
-import { getPrimaryCaseworker, getProgram } from "~/domain/demo-data";
+import {
+	formatDate,
+	getPrimaryCaseworker,
+	getProgram,
+} from "~/domain/demo-data";
 import {
 	EmptyState,
 	ProgramBadge,
@@ -61,10 +74,10 @@ export function ProgramScopePanel({
 			<Group align='flex-start' justify='space-between'>
 				<Box>
 					<Title order={2} size='h4'>
-						Program scope
+						Program Enrollments
 					</Title>
 					<Text c='dimmed' size='sm'>
-						Notes and concrete services follow the selected program.
+						All programs the client is enrolled in.
 					</Text>
 				</Box>
 				<Group gap='xs'>
@@ -98,16 +111,20 @@ export function ProgramScopePanel({
 
 			{caseRecord.enrollments.length > 0 ? (
 				<>
-					<SimpleGrid cols={{ base: 1, lg: 3 }} mt='md'>
+					<Stack
+						className='overflow-hidden rounded-md border border-slate-200'
+						gap={0}
+						mt='md'
+					>
 						{caseRecord.enrollments.map((enrollment) => (
-							<ProgramEnrollmentCard
+							<ProgramEnrollmentRow
 								enrollment={enrollment}
 								key={enrollment.id}
 								onProgramFilterChange={onProgramFilterChange}
 								selected={enrollment.programId === programId}
 							/>
 						))}
-					</SimpleGrid>
+					</Stack>
 
 					<Tabs
 						color='frcBlue'
@@ -164,7 +181,7 @@ export function ProgramScopePanel({
 	);
 }
 
-function ProgramEnrollmentCard({
+function ProgramEnrollmentRow({
 	enrollment,
 	onProgramFilterChange,
 	selected,
@@ -174,32 +191,53 @@ function ProgramEnrollmentCard({
 	selected: boolean;
 }) {
 	const program = getProgram(enrollment.programId);
+	const primaryCaseworker = getPrimaryCaseworker(enrollment);
 
 	return (
 		<button
 			className={[
-				"rounded-md border bg-white p-3 text-left transition",
+				"relative w-full border-0 border-b border-slate-200 bg-white px-4 py-3 text-left transition last:border-b-0",
 				selected
-					? "border-[#1C5380] ring-2 ring-[#1C5380]/15"
-					: "border-slate-200 hover:border-slate-300",
+					? "bg-[#1C5380]/5 shadow-[inset_4px_0_0_#1C5380]"
+					: "hover:bg-slate-50",
 			].join(" ")}
 			onClick={() => onProgramFilterChange(enrollment.programId)}
 			type='button'
 		>
-			<Group justify='space-between'>
-				<ProgramBadge program={program} />
-				<ProgramStatusBadge status={enrollment.status} />
+			<Group align='center' justify='space-between' wrap='wrap'>
+				<Group className='min-w-0 flex-1' gap='md' wrap='nowrap'>
+					<ProgramBadge program={program} />
+					<Box className='min-w-0'>
+						<Text fw={700} truncate>
+							{program?.name ?? "Program"}
+						</Text>
+						<Text c='dimmed' size='sm'>
+							Enrolled: {formatDate(enrollment.opened)}
+						</Text>
+					</Box>
+				</Group>
+
+				<Group gap='lg' wrap='wrap'>
+					<ProgramStatusBadge status={enrollment.status} />
+					<Box className='min-w-36'>
+						<Text c='dimmed' size='xs'>
+							Primary caseworker
+						</Text>
+						<Text fw={700} size='sm'>
+							{primaryCaseworker?.name ?? "Unassigned"}
+						</Text>
+					</Box>
+					<Box className='min-w-24'>
+						<Text c='dimmed' size='xs'>
+							Assigned
+						</Text>
+						<Text fw={700} size='sm'>
+							{enrollment.caseworkers.length} worker
+							{enrollment.caseworkers.length === 1 ? "" : "s"}
+						</Text>
+					</Box>
+				</Group>
 			</Group>
-			<Text fw={700} mt='sm'>
-				{program?.name}
-			</Text>
-			<Text c='dimmed' size='sm'>
-				Primary: {getPrimaryCaseworker(enrollment)?.name ?? "Unassigned"}
-			</Text>
-			<Text c='dimmed' size='sm'>
-				{enrollment.caseworkers.length} assigned caseworker
-				{enrollment.caseworkers.length === 1 ? "" : "s"}
-			</Text>
 		</button>
 	);
 }

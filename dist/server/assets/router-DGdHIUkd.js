@@ -1,5 +1,5 @@
-import { n as DemoWorkspaceProvider, t as useDemoWorkspace } from "./useDemoWorkspace-CZNFquIu.js";
-import { t as Route$6 } from "./_caseId-vk3x0fhS.js";
+import { n as DemoWorkspaceProvider, t as useDemoWorkspace } from "./useDemoWorkspace-HKkN5mR6.js";
+import { t as Route$6 } from "./_caseId-DIC-Qiut.js";
 import { HeadContent, Link, Outlet, Scripts, createFileRoute, createRootRoute, createRouter, lazyRouteComponent, useRouterState } from "@tanstack/react-router";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { AppShell, Box, Button, ColorSchemeScript, Group, MantineProvider, SegmentedControl, Select, Stack, Text, ThemeIcon, Title, createTheme } from "@mantine/core";
@@ -63,7 +63,7 @@ function AppFrame({ children }) {
 						leftSection: /* @__PURE__ */ jsx(Plus, { size: 17 }),
 						radius: 6,
 						to: "/intake",
-						children: "New intake"
+						children: "New Intake"
 					})]
 				})
 			}),
@@ -182,11 +182,11 @@ function RootDocument({ children }) {
 }
 //#endregion
 //#region src/routes/reports.tsx
-var $$splitComponentImporter$4 = () => import("./reports-DRsoJy58.js");
+var $$splitComponentImporter$4 = () => import("./reports-BZojpw5s.js");
 var Route$4 = createFileRoute("/reports")({ component: lazyRouteComponent($$splitComponentImporter$4, "component") });
 //#endregion
 //#region src/routes/intake.tsx
-var $$splitComponentImporter$3 = () => import("./intake-isl_5wuJ.js");
+var $$splitComponentImporter$3 = () => import("./intake-9p3ilUOJ.js");
 var Route$3 = createFileRoute("/intake")({ component: lazyRouteComponent($$splitComponentImporter$3, "component") });
 //#endregion
 //#region src/routes/cases/route.tsx
@@ -194,11 +194,11 @@ var $$splitComponentImporter$2 = () => import("./route-BoHY-RXt.js");
 var Route$2 = createFileRoute("/cases")({ component: lazyRouteComponent($$splitComponentImporter$2, "component") });
 //#endregion
 //#region src/routes/index.tsx
-var $$splitComponentImporter$1 = () => import("./routes-fTLzEDis.js");
+var $$splitComponentImporter$1 = () => import("./routes-DWVHn_E7.js");
 var Route$1 = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
 //#endregion
 //#region src/routes/cases/index.tsx
-var $$splitComponentImporter = () => import("./cases-6LNjvh5B.js");
+var $$splitComponentImporter = () => import("./cases-Dsw9E0Rd.js");
 var Route = createFileRoute("/cases/")({ component: lazyRouteComponent($$splitComponentImporter, "component") });
 //#endregion
 //#region src/routeTree.gen.ts

@@ -1,4 +1,4 @@
-import { t as useDemoWorkspace } from "./useDemoWorkspace-CZNFquIu.js";
+import { t as useDemoWorkspace } from "./useDemoWorkspace-HKkN5mR6.js";
 import { c as getProgram, i as formatDate, m as programs, r as formatCurrency } from "./demo-data-BsOXExLV.js";
 import { i as ProgramBadge, r as MetricTile, t as CaseStatusBadge } from "./CaseworkUI-CJDE9kkn.js";
 import { jsx, jsxs } from "react/jsx-runtime";

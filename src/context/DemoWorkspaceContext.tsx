@@ -42,6 +42,7 @@ const roleDefaults: Record<UserRole, string> = {
 
 const normalize = (value?: string) => value?.trim().toLowerCase() ?? ''
 const normalizePhone = (value?: string) => value?.replace(/\D/g, '') ?? ''
+const normalizeSsn = (value?: string) => value?.replace(/\D/g, '') ?? ''
 
 export type AddNoteInput = {
   enrollmentId: string
@@ -115,6 +116,7 @@ export type IntakeMatchInput = {
   dateOfBirth?: string
   phone?: string
   email?: string
+  ssn?: string
 }
 
 export type IntakeMatch = {
@@ -409,8 +411,16 @@ export function DemoWorkspaceProvider({
     const lastName = normalize(input.lastName)
     const phone = normalizePhone(input.phone)
     const email = normalize(input.email)
+    const ssn = normalizeSsn(input.ssn)
 
-    if (!firstName && !lastName && !phone && !email && !input.dateOfBirth) {
+    if (
+      !firstName &&
+      !lastName &&
+      !phone &&
+      !email &&
+      !input.dateOfBirth &&
+      !ssn
+    ) {
       return []
     }
 
@@ -466,13 +476,18 @@ export function DemoWorkspaceProvider({
         const exactContact =
           (phone && normalizePhone(submission.client.phone) === phone) ||
           (email && normalize(submission.client.email) === email)
+        const exactSsn = ssn && normalizeSsn(submission.client.ssn) === ssn
+        const exactIdentity =
+          (input.dateOfBirth &&
+            submission.client.dateOfBirth === input.dateOfBirth) ||
+          exactSsn
         const nameScore =
           (firstName &&
             normalize(submission.client.firstName).startsWith(firstName)) ||
           (lastName &&
             normalize(submission.client.lastName).startsWith(lastName))
 
-        if (!nameScore && !exactContact) {
+        if (!nameScore && !exactContact && !exactIdentity) {
           return matches
         }
 
@@ -487,7 +502,8 @@ export function DemoWorkspaceProvider({
           lastUpdated: submission.savedAt ?? submission.startedAt,
           assignedStaff: staff.find((person) => person.id === submission.createdById)
             ?.name,
-          strength: exactContact ? 'High confidence' : 'Medium confidence',
+          strength:
+            exactContact || exactSsn ? 'High confidence' : 'Medium confidence',
         })
 
         return matches

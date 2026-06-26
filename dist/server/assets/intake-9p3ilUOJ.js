@@ -1,10 +1,10 @@
-import { t as useDemoWorkspace } from "./useDemoWorkspace-CZNFquIu.js";
+import { t as useDemoWorkspace } from "./useDemoWorkspace-HKkN5mR6.js";
 import { i as formatDate } from "./demo-data-BsOXExLV.js";
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { jsx, jsxs } from "react/jsx-runtime";
-import { Alert, Badge, Box, Button, Checkbox, Divider, Grid, Group, Select, Stack, Table, Tabs, Text, TextInput, Textarea, Title } from "@mantine/core";
-import { AlertTriangle, Check, FilePlus2, Search } from "lucide-react";
+import { Alert, Badge, Box, Button, Checkbox, Divider, Grid, Group, Select, Stack, Table, Tabs, Text, TextInput, Textarea, ThemeIcon, Title } from "@mantine/core";
+import { AlertTriangle, Check, FilePlus2, Info, RotateCcw, Search, UserPlus } from "lucide-react";
 //#region src/components/IntakeWorkflow.tsx
 var TODAY = "2026-06-10";
 var housingOptions = [
@@ -82,23 +82,42 @@ var emptyForm = {
 	legalNotes: "",
 	overrideReason: ""
 };
+function splitLookupName(name) {
+	const parts = name.trim().split(/\s+/).filter(Boolean);
+	return {
+		firstName: parts[0] ?? "",
+		lastName: parts.length > 1 ? parts.slice(1).join(" ") : ""
+	};
+}
 function IntakeWorkflow() {
 	const { createCaseFromIntake, currentStaffId, findIntakeMatches } = useDemoWorkspace();
 	const navigate = useNavigate();
 	const [searchInput, setSearchInput] = useState({
-		firstName: "",
-		lastName: "",
+		name: "",
 		dateOfBirth: "",
+		ssn: "",
 		phone: "",
 		email: ""
 	});
 	const [hasSearched, setHasSearched] = useState(false);
+	const [intakeStarted, setIntakeStarted] = useState(false);
 	const [form, setForm] = useState(emptyForm);
 	const [incomeSources, setIncomeSources] = useState([]);
 	const [benefits, setBenefits] = useState([]);
 	const [contacts, setContacts] = useState([]);
 	const [error, setError] = useState("");
-	const matches = useMemo(() => hasSearched ? findIntakeMatches(searchInput) : [], [
+	const matches = useMemo(() => {
+		if (!hasSearched) return [];
+		const { firstName, lastName } = splitLookupName(searchInput.name);
+		return findIntakeMatches({
+			firstName,
+			lastName,
+			dateOfBirth: searchInput.dateOfBirth,
+			phone: searchInput.phone,
+			email: searchInput.email,
+			ssn: searchInput.ssn
+		});
+	}, [
 		findIntakeMatches,
 		hasSearched,
 		searchInput
@@ -117,6 +136,19 @@ function IntakeWorkflow() {
 				[field]: value
 			}));
 		};
+	}
+	function clearSearch() {
+		setSearchInput({
+			name: "",
+			dateOfBirth: "",
+			ssn: "",
+			phone: "",
+			email: ""
+		});
+		setHasSearched(false);
+	}
+	function continueWithNewPerson() {
+		setIntakeStarted(true);
 	}
 	function handleTextFormField(field) {
 		return (event) => {
@@ -182,8 +214,9 @@ function IntakeWorkflow() {
 		}]);
 	}
 	function saveIntake() {
+		const { firstName, lastName } = splitLookupName(searchInput.name);
 		const hasContact = Boolean(searchInput.phone || searchInput.email);
-		if (!searchInput.firstName.trim() || !searchInput.lastName.trim() || !searchInput.dateOfBirth && !form.approximateAge.trim() || !hasContact || !form.housingStatus) {
+		if (!firstName.trim() || !lastName.trim() || !searchInput.dateOfBirth && !form.approximateAge.trim() || !hasContact || !form.housingStatus) {
 			setError("The intake could not be saved. Please complete required client, contact, age or DOB, and housing fields.");
 			return;
 		}
@@ -198,11 +231,12 @@ function IntakeWorkflow() {
 				duplicateWarnings,
 				duplicateOverrideReason: form.overrideReason || void 0,
 				client: {
-					firstName: searchInput.firstName,
+					firstName,
 					middleName: form.middleName,
-					lastName: searchInput.lastName,
+					lastName,
 					preferredName: form.preferredName,
 					dateOfBirth: searchInput.dateOfBirth,
+					ssn: searchInput.ssn,
 					approximateAge: form.approximateAge,
 					phone: searchInput.phone,
 					alternatePhone: form.alternatePhone,
@@ -281,17 +315,17 @@ function IntakeWorkflow() {
 					/* @__PURE__ */ jsx(Title, {
 						order: 1,
 						size: "h2",
-						children: "New intake workflow"
+						children: "New Intake"
 					}),
 					/* @__PURE__ */ jsx(Text, {
 						c: "dimmed",
 						mt: 4,
-						children: "Search first, review possible matches, then convert a completed intake into a case."
+						children: "Check for an existing person before starting a new intake record."
 					})
 				] }), /* @__PURE__ */ jsx(Button, {
 					leftSection: /* @__PURE__ */ jsx(Check, { size: 17 }),
 					onClick: saveIntake,
-					children: "Save and create case"
+					children: "Save and Create Case"
 				})]
 			}),
 			error ? /* @__PURE__ */ jsx(Alert, {
@@ -300,102 +334,257 @@ function IntakeWorkflow() {
 				children: error
 			}) : null,
 			/* @__PURE__ */ jsxs(Box, {
-				className: "rounded-md border border-slate-200 bg-white p-4 shadow-sm",
-				children: [/* @__PURE__ */ jsxs(Group, {
-					align: "flex-end",
-					children: [
-						/* @__PURE__ */ jsx(TextInput, {
-							label: "First name",
-							onChange: handleSearchField("firstName"),
-							required: true,
-							value: searchInput.firstName
-						}),
-						/* @__PURE__ */ jsx(TextInput, {
-							label: "Last name",
-							onChange: handleSearchField("lastName"),
-							required: true,
-							value: searchInput.lastName
-						}),
-						/* @__PURE__ */ jsx(TextInput, {
-							label: "Date of birth",
-							onChange: handleSearchField("dateOfBirth"),
-							placeholder: "YYYY-MM-DD",
-							value: searchInput.dateOfBirth
-						}),
-						/* @__PURE__ */ jsx(TextInput, {
-							label: "Phone",
-							onChange: handleSearchField("phone"),
-							value: searchInput.phone
-						}),
-						/* @__PURE__ */ jsx(TextInput, {
-							label: "Email",
-							onChange: handleSearchField("email"),
-							value: searchInput.email
-						}),
-						/* @__PURE__ */ jsx(Button, {
-							leftSection: /* @__PURE__ */ jsx(Search, { size: 16 }),
-							onClick: () => setHasSearched(true),
-							children: "Check matches"
-						})
-					]
-				}), hasSearched ? matches.length > 0 ? /* @__PURE__ */ jsxs(Stack, {
-					mt: "md",
-					children: [
-						/* @__PURE__ */ jsx(Alert, {
-							color: "yellow",
-							icon: /* @__PURE__ */ jsx(AlertTriangle, { size: 18 }),
-							children: "Possible existing records found. Review these before creating a new intake."
-						}),
-						/* @__PURE__ */ jsx(Table.ScrollContainer, {
-							minWidth: 860,
-							children: /* @__PURE__ */ jsxs(Table, {
-								verticalSpacing: "sm",
-								children: [/* @__PURE__ */ jsx(Table.Thead, { children: /* @__PURE__ */ jsxs(Table.Tr, { children: [
-									/* @__PURE__ */ jsx(Table.Th, { children: "Client" }),
-									/* @__PURE__ */ jsx(Table.Th, { children: "Record" }),
-									/* @__PURE__ */ jsx(Table.Th, { children: "Status" }),
-									/* @__PURE__ */ jsx(Table.Th, { children: "Program area" }),
-									/* @__PURE__ */ jsx(Table.Th, { children: "Last updated" }),
-									/* @__PURE__ */ jsx(Table.Th, { children: "Assigned staff" }),
-									/* @__PURE__ */ jsx(Table.Th, { children: "Match" })
-								] }) }), /* @__PURE__ */ jsx(Table.Tbody, { children: matches.map((match) => /* @__PURE__ */ jsxs(Table.Tr, { children: [
-									/* @__PURE__ */ jsxs(Table.Td, { children: [/* @__PURE__ */ jsx(Text, {
-										fw: 700,
-										children: match.clientName
-									}), /* @__PURE__ */ jsx(Text, {
-										c: "dimmed",
-										size: "sm",
-										children: [match.phone, match.email].filter(Boolean).join(" - ")
-									})] }),
-									/* @__PURE__ */ jsx(Table.Td, { children: match.recordType }),
-									/* @__PURE__ */ jsx(Table.Td, { children: match.caseStatus ?? "Draft" }),
-									/* @__PURE__ */ jsx(Table.Td, { children: match.programArea }),
-									/* @__PURE__ */ jsx(Table.Td, { children: formatDate(match.lastUpdated.slice(0, 10)) }),
-									/* @__PURE__ */ jsx(Table.Td, { children: match.assignedStaff ?? "Unassigned" }),
-									/* @__PURE__ */ jsx(Table.Td, { children: /* @__PURE__ */ jsx(Badge, {
-										color: match.strength.startsWith("High") ? "red" : "yellow",
-										children: match.strength
-									}) })
-								] }, `${match.recordType}-${match.id}`)) })]
+				className: "rounded-md border border-slate-200 bg-white p-5 shadow-sm",
+				children: [
+					/* @__PURE__ */ jsxs(Group, {
+						align: "flex-start",
+						justify: "space-between",
+						children: [/* @__PURE__ */ jsx(Box, { children: /* @__PURE__ */ jsxs(Group, {
+							gap: "sm",
+							children: [/* @__PURE__ */ jsx(ThemeIcon, {
+								color: "frcBlue",
+								radius: 6,
+								variant: "light",
+								children: /* @__PURE__ */ jsx(Search, { size: 18 })
+							}), /* @__PURE__ */ jsxs(Box, { children: [/* @__PURE__ */ jsx(Title, {
+								order: 2,
+								size: "h4",
+								children: "Step 1: Search for Potential Matches"
+							}), /* @__PURE__ */ jsx(Text, {
+								c: "dimmed",
+								size: "sm",
+								children: "Look up people by name, DOB, SSN, phone, or email before beginning the intake."
+							})] })]
+						}) }), /* @__PURE__ */ jsx(Box, {
+							className: "max-w-sm rounded-md bg-slate-50 p-3",
+							children: /* @__PURE__ */ jsxs(Group, {
+								align: "flex-start",
+								gap: "sm",
+								wrap: "nowrap",
+								children: [/* @__PURE__ */ jsx(Info, {
+									size: 18,
+									className: "mt-0.5 text-[#1C5380]"
+								}), /* @__PURE__ */ jsx(Text, {
+									c: "dimmed",
+									size: "sm",
+									children: "Search includes existing cases and unfinished intake drafts in this workspace."
+								})]
 							})
-						}),
-						/* @__PURE__ */ jsx(Textarea, {
-							label: "Duplicate override note",
-							onChange: handleTextFormField("overrideReason"),
-							placeholder: "Reason for creating a new intake anyway",
-							value: form.overrideReason
-						})
-					]
-				}) : /* @__PURE__ */ jsx(Alert, {
-					color: "green",
-					icon: /* @__PURE__ */ jsx(FilePlus2, { size: 18 }),
-					mt: "md",
-					children: "No matching clients, intakes, or cases were found. Continue creating a new intake."
-				}) : null]
+						})]
+					}),
+					/* @__PURE__ */ jsxs(Grid, {
+						align: "flex-end",
+						mt: "md",
+						children: [
+							/* @__PURE__ */ jsx(Grid.Col, {
+								span: {
+									base: 12,
+									md: 4
+								},
+								children: /* @__PURE__ */ jsx(TextInput, {
+									leftSection: /* @__PURE__ */ jsx(Search, { size: 16 }),
+									label: "Name",
+									onChange: handleSearchField("name"),
+									placeholder: "First and last name",
+									value: searchInput.name
+								})
+							}),
+							/* @__PURE__ */ jsx(Grid.Col, {
+								span: {
+									base: 12,
+									sm: 6,
+									md: 2
+								},
+								children: /* @__PURE__ */ jsx(TextInput, {
+									label: "Date of birth",
+									onChange: handleSearchField("dateOfBirth"),
+									placeholder: "YYYY-MM-DD",
+									value: searchInput.dateOfBirth
+								})
+							}),
+							/* @__PURE__ */ jsx(Grid.Col, {
+								span: {
+									base: 12,
+									sm: 6,
+									md: 2
+								},
+								children: /* @__PURE__ */ jsx(TextInput, {
+									label: "SSN",
+									onChange: handleSearchField("ssn"),
+									placeholder: "Last 4 or full SSN",
+									value: searchInput.ssn
+								})
+							}),
+							/* @__PURE__ */ jsx(Grid.Col, {
+								span: {
+									base: 12,
+									sm: 6,
+									md: 2
+								},
+								children: /* @__PURE__ */ jsx(TextInput, {
+									label: "Phone",
+									onChange: handleSearchField("phone"),
+									placeholder: "(555) 555-5555",
+									value: searchInput.phone
+								})
+							}),
+							/* @__PURE__ */ jsx(Grid.Col, {
+								span: {
+									base: 12,
+									sm: 6,
+									md: 2
+								},
+								children: /* @__PURE__ */ jsx(TextInput, {
+									label: "Email",
+									onChange: handleSearchField("email"),
+									placeholder: "name@example.org",
+									value: searchInput.email
+								})
+							}),
+							/* @__PURE__ */ jsx(Grid.Col, {
+								span: 12,
+								children: /* @__PURE__ */ jsxs(Group, {
+									justify: "space-between",
+									children: [/* @__PURE__ */ jsxs(Group, { children: [/* @__PURE__ */ jsx(Button, {
+										leftSection: /* @__PURE__ */ jsx(Search, { size: 16 }),
+										onClick: () => setHasSearched(true),
+										children: "Search"
+									}), /* @__PURE__ */ jsx(Button, {
+										leftSection: /* @__PURE__ */ jsx(RotateCcw, { size: 16 }),
+										onClick: clearSearch,
+										variant: "subtle",
+										children: "Clear"
+									})] }), /* @__PURE__ */ jsx(Button, {
+										leftSection: /* @__PURE__ */ jsx(UserPlus, { size: 17 }),
+										onClick: continueWithNewPerson,
+										variant: intakeStarted ? "light" : "outline",
+										children: "Continue with New Person"
+									})]
+								})
+							})
+						]
+					}),
+					/* @__PURE__ */ jsxs(Box, {
+						mt: "lg",
+						children: [/* @__PURE__ */ jsxs(Group, {
+							justify: "space-between",
+							mb: "xs",
+							children: [/* @__PURE__ */ jsx(Text, {
+								fw: 700,
+								children: "Potential Matches"
+							}), hasSearched ? /* @__PURE__ */ jsxs(Badge, {
+								color: matches.length > 0 ? "yellow" : "green",
+								children: [matches.length, " found"]
+							}) : null]
+						}), hasSearched ? matches.length > 0 ? /* @__PURE__ */ jsxs(Stack, { children: [
+							/* @__PURE__ */ jsx(Alert, {
+								color: "yellow",
+								icon: /* @__PURE__ */ jsx(AlertTriangle, { size: 18 }),
+								children: "Possible existing records found. Review these before creating a new intake."
+							}),
+							/* @__PURE__ */ jsx(Table.ScrollContainer, {
+								minWidth: 900,
+								children: /* @__PURE__ */ jsxs(Table, {
+									verticalSpacing: "sm",
+									children: [/* @__PURE__ */ jsx(Table.Thead, { children: /* @__PURE__ */ jsxs(Table.Tr, { children: [
+										/* @__PURE__ */ jsx(Table.Th, { children: "Name" }),
+										/* @__PURE__ */ jsx(Table.Th, { children: "Phone / Email" }),
+										/* @__PURE__ */ jsx(Table.Th, { children: "Record" }),
+										/* @__PURE__ */ jsx(Table.Th, { children: "Status" }),
+										/* @__PURE__ */ jsx(Table.Th, { children: "Program area" }),
+										/* @__PURE__ */ jsx(Table.Th, { children: "Last updated" }),
+										/* @__PURE__ */ jsx(Table.Th, { children: "Match" }),
+										/* @__PURE__ */ jsx(Table.Th, { children: "Action" })
+									] }) }), /* @__PURE__ */ jsx(Table.Tbody, { children: matches.map((match) => /* @__PURE__ */ jsxs(Table.Tr, { children: [
+										/* @__PURE__ */ jsxs(Table.Td, { children: [/* @__PURE__ */ jsx(Text, {
+											fw: 700,
+											children: match.clientName
+										}), /* @__PURE__ */ jsx(Text, {
+											c: "dimmed",
+											size: "sm",
+											children: match.dateOfBirth ? `DOB ${formatDate(match.dateOfBirth)}` : "DOB not recorded"
+										})] }),
+										/* @__PURE__ */ jsxs(Table.Td, { children: [/* @__PURE__ */ jsx(Text, {
+											size: "sm",
+											children: match.phone ?? "No phone"
+										}), /* @__PURE__ */ jsx(Text, {
+											c: "dimmed",
+											size: "sm",
+											children: match.email ?? "No email"
+										})] }),
+										/* @__PURE__ */ jsx(Table.Td, { children: match.recordType }),
+										/* @__PURE__ */ jsx(Table.Td, { children: match.caseStatus ?? "Draft" }),
+										/* @__PURE__ */ jsx(Table.Td, { children: match.programArea }),
+										/* @__PURE__ */ jsx(Table.Td, { children: formatDate(match.lastUpdated.slice(0, 10)) }),
+										/* @__PURE__ */ jsx(Table.Td, { children: /* @__PURE__ */ jsx(Badge, {
+											color: match.strength.startsWith("High") ? "red" : "yellow",
+											children: match.strength
+										}) }),
+										/* @__PURE__ */ jsx(Table.Td, { children: /* @__PURE__ */ jsx(Button, {
+											size: "xs",
+											variant: "light",
+											children: "View"
+										}) })
+									] }, `${match.recordType}-${match.id}`)) })]
+								})
+							}),
+							/* @__PURE__ */ jsx(Textarea, {
+								label: "Duplicate override note",
+								onChange: handleTextFormField("overrideReason"),
+								placeholder: "Reason for creating a new intake anyway",
+								value: form.overrideReason
+							})
+						] }) : /* @__PURE__ */ jsx(Alert, {
+							color: "green",
+							icon: /* @__PURE__ */ jsx(FilePlus2, { size: 18 }),
+							children: "No matching clients, intakes, or cases were found. Continue creating a new intake."
+						}) : /* @__PURE__ */ jsx(Box, {
+							className: "rounded-md border border-dashed border-slate-300 bg-slate-50 p-5 text-center",
+							children: /* @__PURE__ */ jsx(Text, {
+								c: "dimmed",
+								fw: 700,
+								children: "Run a search to see potential matches."
+							})
+						})]
+					})
+				]
 			}),
-			/* @__PURE__ */ jsx(Box, {
-				className: "rounded-md border border-slate-200 bg-white p-4 shadow-sm",
-				children: /* @__PURE__ */ jsxs(Tabs, {
+			/* @__PURE__ */ jsx(Divider, {
+				label: "Begin a new intake below",
+				labelPosition: "center",
+				my: "xs"
+			}),
+			/* @__PURE__ */ jsxs(Box, {
+				className: "rounded-md border border-slate-200 bg-white p-5 shadow-sm",
+				children: [/* @__PURE__ */ jsxs(Group, {
+					align: "flex-start",
+					justify: "space-between",
+					mb: "md",
+					children: [/* @__PURE__ */ jsx(Box, { children: /* @__PURE__ */ jsxs(Group, {
+						gap: "sm",
+						children: [/* @__PURE__ */ jsx(ThemeIcon, {
+							color: "green",
+							radius: 6,
+							variant: "light",
+							children: /* @__PURE__ */ jsx(UserPlus, { size: 18 })
+						}), /* @__PURE__ */ jsxs(Box, { children: [/* @__PURE__ */ jsx(Title, {
+							order: 2,
+							size: "h4",
+							children: "Step 2: Begin New Intake"
+						}), /* @__PURE__ */ jsx(Text, {
+							c: "dimmed",
+							size: "sm",
+							children: "Complete the intake details for the person you are adding."
+						})] })]
+					}) }), intakeStarted ? /* @__PURE__ */ jsx(Badge, {
+						color: "green",
+						children: "New person selected"
+					}) : /* @__PURE__ */ jsx(Badge, {
+						color: "gray",
+						variant: "light",
+						children: "Awaiting lookup"
+					})]
+				}), /* @__PURE__ */ jsxs(Tabs, {
 					defaultValue: "client",
 					children: [
 						/* @__PURE__ */ jsxs(Tabs.List, { children: [
@@ -905,7 +1094,7 @@ function IntakeWorkflow() {
 							] })
 						})
 					]
-				})
+				})]
 			})
 		]
 	});

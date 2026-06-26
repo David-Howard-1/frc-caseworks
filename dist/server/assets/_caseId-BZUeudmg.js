@@ -1,61 +1,16 @@
-import { t as useDemoWorkspace } from "./useDemoWorkspace-CZNFquIu.js";
+import { t as useDemoWorkspace } from "./useDemoWorkspace-HKkN5mR6.js";
 import { a as formatExactCurrency, c as getProgram, h as staff, i as formatDate, l as getStaff, o as getAssignedCaseworkers, s as getPrimaryCaseworker } from "./demo-data-BsOXExLV.js";
-import { t as Route } from "./_caseId-vk3x0fhS.js";
-import { a as ProgramStatusBadge, i as ProgramBadge, n as EmptyState, o as RiskBadge, t as CaseStatusBadge } from "./CaseworkUI-CJDE9kkn.js";
+import { t as Route } from "./_caseId-DIC-Qiut.js";
+import { a as ProgramStatusBadge, i as ProgramBadge, n as EmptyState, o as RiskBadge } from "./CaseworkUI-CJDE9kkn.js";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
-import { ActionIcon, Badge, Box, Button, Checkbox, Group, Modal, NumberInput, Select, SimpleGrid, Stack, Table, Tabs, Text, TextInput, Textarea, Title, Tooltip } from "@mantine/core";
-import { ArrowLeft, ClipboardList, DollarSign, FileText, Pencil, Plus, Save, UserRound, UsersRound } from "lucide-react";
+import { ActionIcon, Avatar, Badge, Box, Button, Checkbox, Group, Modal, NumberInput, Select, SimpleGrid, Stack, Table, Tabs, Text, TextInput, Textarea, Title, Tooltip } from "@mantine/core";
+import { ArrowLeft, CalendarDays, ClipboardList, Clock3, DollarSign, FileText, Pencil, Plus, Save, UserRound, UsersRound } from "lucide-react";
 import { useDisclosure } from "@mantine/hooks";
 //#region src/lib/util.ts
 function roundToNearestQuarter(value) {
 	return Math.round(value * 4) / 4;
-}
-//#endregion
-//#region src/components/case-detail/CaseHeader.tsx
-function CaseHeader({ caseRecord, onOpenClientInfo }) {
-	return /* @__PURE__ */ jsxs(Group, {
-		align: "flex-start",
-		justify: "space-between",
-		children: [/* @__PURE__ */ jsxs(Stack, {
-			gap: 6,
-			children: [
-				/* @__PURE__ */ jsx(Button, {
-					component: Link,
-					leftSection: /* @__PURE__ */ jsx(ArrowLeft, { size: 16 }),
-					radius: 6,
-					to: "/cases",
-					variant: "subtle",
-					w: "fit-content",
-					children: "Cases"
-				}),
-				/* @__PURE__ */ jsxs(Group, {
-					gap: "xs",
-					children: [/* @__PURE__ */ jsx(Title, {
-						order: 1,
-						size: "h2",
-						children: caseRecord.displayName
-					}), /* @__PURE__ */ jsx(CaseStatusBadge, { status: caseRecord.status })]
-				}),
-				/* @__PURE__ */ jsxs(Text, {
-					c: "dimmed",
-					children: [
-						caseRecord.id,
-						" - Last contact",
-						" ",
-						formatDate(caseRecord.lastContact)
-					]
-				})
-			]
-		}), /* @__PURE__ */ jsx(Button, {
-			leftSection: /* @__PURE__ */ jsx(UserRound, { size: 17 }),
-			onClick: onOpenClientInfo,
-			radius: 6,
-			variant: "light",
-			children: "Client info"
-		})]
-	});
 }
 //#endregion
 //#region src/components/case-detail/constants.ts
@@ -85,67 +40,130 @@ var quickNoteOptions = [
 	"Unable to Contact"
 ];
 //#endregion
-//#region src/components/case-detail/StatusTile.tsx
-function StatusTile({ label, value }) {
-	return /* @__PURE__ */ jsxs(Box, {
-		className: "rounded-md border border-slate-200 p-3",
-		children: [/* @__PURE__ */ jsx(Text, {
-			c: "dimmed",
-			fw: 700,
-			size: "sm",
-			tt: "uppercase",
-			children: label
-		}), /* @__PURE__ */ jsx(Text, {
-			fw: 700,
-			mt: 6,
-			children: value
+//#region src/components/case-detail/CaseHeader.tsx
+function CaseHeader({ caseRecord, concreteServicesTotal, onOpenClientInfo, onStatusChange }) {
+	const initials = caseRecord.displayName.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+	return /* @__PURE__ */ jsxs(Stack, {
+		gap: "sm",
+		children: [/* @__PURE__ */ jsx(Button, {
+			component: Link,
+			leftSection: /* @__PURE__ */ jsx(ArrowLeft, { size: 16 }),
+			radius: 6,
+			to: "/cases",
+			variant: "subtle",
+			w: "fit-content",
+			children: "Cases"
+		}), /* @__PURE__ */ jsxs(Box, {
+			className: "rounded-md border border-slate-200 bg-white p-5 shadow-sm",
+			children: [/* @__PURE__ */ jsxs(Group, {
+				align: "flex-start",
+				gap: "lg",
+				justify: "space-between",
+				children: [/* @__PURE__ */ jsxs(Group, {
+					align: "flex-start",
+					gap: "md",
+					className: "min-w-0",
+					children: [/* @__PURE__ */ jsx(Avatar, {
+						color: "frcBlue",
+						radius: 10,
+						size: 64,
+						variant: "light",
+						children: initials
+					}), /* @__PURE__ */ jsxs(Stack, {
+						gap: 8,
+						className: "min-w-0",
+						children: [/* @__PURE__ */ jsxs(Group, {
+							gap: "xs",
+							children: [/* @__PURE__ */ jsx(Title, {
+								order: 1,
+								size: "h2",
+								children: caseRecord.displayName
+							}), /* @__PURE__ */ jsx(RiskBadge, { risk: caseRecord.risk })]
+						}), /* @__PURE__ */ jsxs(Group, {
+							c: "dimmed",
+							gap: "sm",
+							children: [
+								/* @__PURE__ */ jsxs(Text, {
+									size: "sm",
+									children: ["Case #: ", caseRecord.id]
+								}),
+								/* @__PURE__ */ jsx(Text, {
+									"aria-hidden": "true",
+									size: "sm",
+									children: "|"
+								}),
+								/* @__PURE__ */ jsxs(Text, {
+									size: "sm",
+									children: ["County: ", caseRecord.county]
+								})
+							]
+						})]
+					})]
+				}), /* @__PURE__ */ jsxs(Group, {
+					align: "flex-start",
+					gap: "sm",
+					children: [/* @__PURE__ */ jsx(Select, {
+						allowDeselect: false,
+						data: caseStatusOptions,
+						label: "Case status",
+						onChange: (value) => value ? onStatusChange(value) : void 0,
+						radius: 6,
+						size: "sm",
+						value: caseRecord.status,
+						w: 160
+					}), /* @__PURE__ */ jsx(Button, {
+						leftSection: /* @__PURE__ */ jsx(UserRound, { size: 17 }),
+						onClick: onOpenClientInfo,
+						radius: 6,
+						variant: "light",
+						children: "Client info"
+					})]
+				})]
+			}), /* @__PURE__ */ jsxs(SimpleGrid, {
+				cols: {
+					base: 1,
+					sm: 3
+				},
+				mt: "lg",
+				spacing: "sm",
+				children: [
+					/* @__PURE__ */ jsx(HeaderMetric, {
+						icon: /* @__PURE__ */ jsx(CalendarDays, { size: 16 }),
+						label: "Opened",
+						value: formatDate(caseRecord.opened)
+					}),
+					/* @__PURE__ */ jsx(HeaderMetric, {
+						icon: /* @__PURE__ */ jsx(Clock3, { size: 16 }),
+						label: "Last contact",
+						value: formatDate(caseRecord.lastContact)
+					}),
+					/* @__PURE__ */ jsx(HeaderMetric, {
+						icon: /* @__PURE__ */ jsx(DollarSign, { size: 16 }),
+						label: "Concrete services",
+						value: formatExactCurrency(concreteServicesTotal)
+					})
+				]
+			})]
 		})]
 	});
 }
-//#endregion
-//#region src/components/case-detail/CaseStatusPanel.tsx
-function CaseStatusPanel({ caseRecord, concreteServicesTotal, onStatusChange }) {
+function HeaderMetric({ icon, label, value }) {
 	return /* @__PURE__ */ jsxs(Box, {
-		className: "rounded-md border border-slate-200 bg-white p-4 shadow-sm",
+		className: "rounded-md border border-slate-200 bg-slate-50 px-3 py-2",
 		children: [/* @__PURE__ */ jsxs(Group, {
-			align: "center",
-			justify: "space-between",
-			children: [/* @__PURE__ */ jsx(Title, {
-				order: 2,
-				size: "h4",
-				children: "Case status"
-			}), /* @__PURE__ */ jsx(RiskBadge, { risk: caseRecord.risk })]
-		}), /* @__PURE__ */ jsxs(SimpleGrid, {
-			cols: {
-				base: 1,
-				sm: 2,
-				lg: 4
-			},
-			mt: "md",
-			children: [
-				/* @__PURE__ */ jsx(Box, {
-					className: "rounded-md border border-slate-200 p-3",
-					children: /* @__PURE__ */ jsx(Select, {
-						allowDeselect: false,
-						data: caseStatusOptions,
-						label: "Overall status",
-						onChange: (value) => value ? onStatusChange(value) : void 0,
-						value: caseRecord.status
-					})
-				}),
-				/* @__PURE__ */ jsx(StatusTile, {
-					label: "Opened",
-					value: formatDate(caseRecord.opened)
-				}),
-				/* @__PURE__ */ jsx(StatusTile, {
-					label: "Last contact",
-					value: formatDate(caseRecord.lastContact)
-				}),
-				/* @__PURE__ */ jsx(StatusTile, {
-					label: "Concrete services",
-					value: formatExactCurrency(concreteServicesTotal)
-				})
-			]
+			c: "dimmed",
+			gap: 6,
+			children: [icon, /* @__PURE__ */ jsx(Text, {
+				fw: 700,
+				size: "xs",
+				tt: "uppercase",
+				children: label
+			})]
+		}), /* @__PURE__ */ jsx(Text, {
+			fw: 700,
+			mt: 4,
+			size: "sm",
+			children: value
 		})]
 	});
 }
@@ -624,11 +642,11 @@ function ProgramScopePanel({ caseRecord, enrollmentOptions, enrollmentPrograms, 
 			children: [/* @__PURE__ */ jsxs(Box, { children: [/* @__PURE__ */ jsx(Title, {
 				order: 2,
 				size: "h4",
-				children: "Program scope"
+				children: "Program Enrollments"
 			}), /* @__PURE__ */ jsx(Text, {
 				c: "dimmed",
 				size: "sm",
-				children: "Notes and concrete services follow the selected program."
+				children: "All programs the client is enrolled in."
 			})] }), /* @__PURE__ */ jsx(Group, {
 				gap: "xs",
 				children: selectedProgram ? /* @__PURE__ */ jsxs(Fragment, { children: [
@@ -653,13 +671,11 @@ function ProgramScopePanel({ caseRecord, enrollmentOptions, enrollmentPrograms, 
 					children: "All programs"
 				})
 			})]
-		}), caseRecord.enrollments.length > 0 ? /* @__PURE__ */ jsxs(Fragment, { children: [/* @__PURE__ */ jsx(SimpleGrid, {
-			cols: {
-				base: 1,
-				lg: 3
-			},
+		}), caseRecord.enrollments.length > 0 ? /* @__PURE__ */ jsxs(Fragment, { children: [/* @__PURE__ */ jsx(Stack, {
+			className: "overflow-hidden rounded-md border border-slate-200",
+			gap: 0,
 			mt: "md",
-			children: caseRecord.enrollments.map((enrollment) => /* @__PURE__ */ jsx(ProgramEnrollmentCard, {
+			children: caseRecord.enrollments.map((enrollment) => /* @__PURE__ */ jsx(ProgramEnrollmentRow, {
 				enrollment,
 				onProgramFilterChange,
 				selected: enrollment.programId === programId
@@ -710,37 +726,69 @@ function ProgramScopePanel({ caseRecord, enrollmentOptions, enrollmentPrograms, 
 		})]
 	});
 }
-function ProgramEnrollmentCard({ enrollment, onProgramFilterChange, selected }) {
+function ProgramEnrollmentRow({ enrollment, onProgramFilterChange, selected }) {
 	const program = getProgram(enrollment.programId);
-	return /* @__PURE__ */ jsxs("button", {
-		className: ["rounded-md border bg-white p-3 text-left transition", selected ? "border-[#1C5380] ring-2 ring-[#1C5380]/15" : "border-slate-200 hover:border-slate-300"].join(" "),
+	const primaryCaseworker = getPrimaryCaseworker(enrollment);
+	return /* @__PURE__ */ jsx("button", {
+		className: ["relative w-full border-0 border-b border-slate-200 bg-white px-4 py-3 text-left transition last:border-b-0", selected ? "bg-[#1C5380]/5 shadow-[inset_4px_0_0_#1C5380]" : "hover:bg-slate-50"].join(" "),
 		onClick: () => onProgramFilterChange(enrollment.programId),
 		type: "button",
-		children: [
-			/* @__PURE__ */ jsxs(Group, {
-				justify: "space-between",
-				children: [/* @__PURE__ */ jsx(ProgramBadge, { program }), /* @__PURE__ */ jsx(ProgramStatusBadge, { status: enrollment.status })]
-			}),
-			/* @__PURE__ */ jsx(Text, {
-				fw: 700,
-				mt: "sm",
-				children: program?.name
-			}),
-			/* @__PURE__ */ jsxs(Text, {
-				c: "dimmed",
-				size: "sm",
-				children: ["Primary: ", getPrimaryCaseworker(enrollment)?.name ?? "Unassigned"]
-			}),
-			/* @__PURE__ */ jsxs(Text, {
-				c: "dimmed",
-				size: "sm",
+		children: /* @__PURE__ */ jsxs(Group, {
+			align: "center",
+			justify: "space-between",
+			wrap: "wrap",
+			children: [/* @__PURE__ */ jsxs(Group, {
+				className: "min-w-0 flex-1",
+				gap: "md",
+				wrap: "nowrap",
+				children: [/* @__PURE__ */ jsx(ProgramBadge, { program }), /* @__PURE__ */ jsxs(Box, {
+					className: "min-w-0",
+					children: [/* @__PURE__ */ jsx(Text, {
+						fw: 700,
+						truncate: true,
+						children: program?.name ?? "Program"
+					}), /* @__PURE__ */ jsxs(Text, {
+						c: "dimmed",
+						size: "sm",
+						children: ["Enrolled: ", formatDate(enrollment.opened)]
+					})]
+				})]
+			}), /* @__PURE__ */ jsxs(Group, {
+				gap: "lg",
+				wrap: "wrap",
 				children: [
-					enrollment.caseworkers.length,
-					" assigned caseworker",
-					enrollment.caseworkers.length === 1 ? "" : "s"
+					/* @__PURE__ */ jsx(ProgramStatusBadge, { status: enrollment.status }),
+					/* @__PURE__ */ jsxs(Box, {
+						className: "min-w-36",
+						children: [/* @__PURE__ */ jsx(Text, {
+							c: "dimmed",
+							size: "xs",
+							children: "Primary caseworker"
+						}), /* @__PURE__ */ jsx(Text, {
+							fw: 700,
+							size: "sm",
+							children: primaryCaseworker?.name ?? "Unassigned"
+						})]
+					}),
+					/* @__PURE__ */ jsxs(Box, {
+						className: "min-w-24",
+						children: [/* @__PURE__ */ jsx(Text, {
+							c: "dimmed",
+							size: "xs",
+							children: "Assigned"
+						}), /* @__PURE__ */ jsxs(Text, {
+							fw: 700,
+							size: "sm",
+							children: [
+								enrollment.caseworkers.length,
+								" worker",
+								enrollment.caseworkers.length === 1 ? "" : "s"
+							]
+						})]
+					})
 				]
-			})
-		]
+			})]
+		})
 	});
 }
 //#endregion
@@ -1044,7 +1092,9 @@ function CaseDetail({ caseId, onProgramFilterChange, programId }) {
 			children: [
 				/* @__PURE__ */ jsx(CaseHeader, {
 					caseRecord: currentCase,
-					onOpenClientInfo: clientInfoHandlers.open
+					concreteServicesTotal: caseServicesTotal,
+					onOpenClientInfo: clientInfoHandlers.open,
+					onStatusChange: (status) => updateCaseStatus(currentCase.id, status)
 				}),
 				!canViewCase ? /* @__PURE__ */ jsx(Box, {
 					className: "rounded-md border border-yellow-200 bg-yellow-50 p-3",
@@ -1055,11 +1105,6 @@ function CaseDetail({ caseId, onProgramFilterChange, programId }) {
 						children: "This case is outside the current role scope."
 					})
 				}) : null,
-				/* @__PURE__ */ jsx(CaseStatusPanel, {
-					caseRecord: currentCase,
-					concreteServicesTotal: caseServicesTotal,
-					onStatusChange: (status) => updateCaseStatus(currentCase.id, status)
-				}),
 				/* @__PURE__ */ jsx(ProgramScopePanel, {
 					caseRecord: currentCase,
 					enrollmentOptions,
