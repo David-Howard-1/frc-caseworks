@@ -26,6 +26,7 @@ import type {
   ClientCase,
   Grantor,
   IntakeSubmission,
+  Person,
   ProgramStatus,
   UserRole,
   WorkspaceSnapshot,
@@ -236,6 +237,26 @@ export async function loadWorkspaceUseCase(): Promise<WorkspaceSnapshot> {
       programs: (userProgramsByUserId.get(user.id) ?? []).map(
         (membership) => membership.programId,
       ),
+    })),
+    people: rows.personRows.map<Person>((person) => ({
+      id: person.id,
+      frcId: person.frcId,
+      role: person.personRole,
+      firstName: person.firstName ?? undefined,
+      middleName: person.middleName ?? undefined,
+      lastName: person.lastName ?? undefined,
+      preferredName: person.preferredName ?? undefined,
+      pronouns: person.pronouns ?? undefined,
+      approximateAge: person.approximateAge ?? undefined,
+      dateOfBirth: toDateString(person.dateOfBirth) || undefined,
+      phone: person.phone ?? undefined,
+      email: person.email ?? undefined,
+      addressLine1: person.addressLine1 ?? undefined,
+      addressLine2: person.addressLine2 ?? undefined,
+      city: person.city ?? undefined,
+      state: person.state ?? undefined,
+      postalCode: person.postalCode ?? undefined,
+      county: person.county ?? undefined,
     })),
     cases: workspaceCases,
     intakeSubmissions: rows.intakeSubmissionRows.map((submission) => ({
@@ -518,6 +539,9 @@ async function resolveFrcId(currentStaffId: number) {
 export async function createCaseFromIntakeUseCase(input: {
   intake: IntakeSubmissionInput
   currentStaffId: number
+  existingPersonId?: number
+  existingCaseId?: number
+  mode?: 'new_case' | 'reintake'
 }) {
   if (!hasDatabaseUrl()) {
     return undefined
@@ -530,44 +554,11 @@ export async function createCaseFromIntakeUseCase(input: {
     warning.includes('High confidence'),
   )
 
-  const personId = await insertPersonRow(db, {
-    frcId,
-    personRole: 'client',
-    firstName: input.intake.client.firstName,
-    middleName: input.intake.client.middleName,
-    lastName: input.intake.client.lastName,
-    preferredName: input.intake.client.preferredName,
-    approximateAge: input.intake.client.approximateAge,
-    dateOfBirth: input.intake.client.dateOfBirth,
-    phone: input.intake.client.phone,
-    email: input.intake.client.email,
-    addressLine1: input.intake.address.line1,
-    addressLine2: input.intake.address.line2,
-    city: input.intake.address.city,
-    state: input.intake.address.state,
-    postalCode: input.intake.address.postalCode,
-    county:
-      input.intake.address.county ||
-      input.intake.housing.currentLocation ||
-      'Unknown',
-  })
-
-  const caseId = await insertCaseRow(db, {
-    frcId,
-    primaryPersonId: personId,
-    status: 'open',
-    risk: hasHighDuplicate ? 'medium' : 'low',
-    openedAt: createdDate,
-    lastContactAt: createdDate,
-    householdName:
-      `${input.intake.client.firstName} ${input.intake.client.lastName}`.trim(),
-  })
-
-  await insertPrimaryIntakeRow(db, {
-    caseId,
+  const primaryIntakeValues = {
     completedById: input.currentStaffId,
     intakeDate: createdDate,
-    referralSource: 'New intake workflow',
+    referralSource:
+      input.mode === 'reintake' ? 'Re-intake workflow' : 'New intake workflow',
     familyStrengths: input.intake.demographics.primaryLanguage
       ? `Primary language: ${input.intake.demographics.primaryLanguage}`
       : undefined,
@@ -593,7 +584,55 @@ export async function createCaseFromIntakeUseCase(input: {
       email: input.intake.client.email,
       phone: input.intake.client.phone,
     },
-  })
+  } satisfies Omit<Parameters<typeof insertPrimaryIntakeRow>[1], 'caseId'>
+
+  const personId =
+    input.existingPersonId ??
+    (await insertPersonRow(db, {
+      frcId,
+      personRole: 'client',
+      firstName: input.intake.client.firstName,
+      middleName: input.intake.client.middleName,
+      lastName: input.intake.client.lastName,
+      preferredName: input.intake.client.preferredName,
+      approximateAge: input.intake.client.approximateAge,
+      dateOfBirth: input.intake.client.dateOfBirth,
+      phone: input.intake.client.phone,
+      email: input.intake.client.email,
+      addressLine1: input.intake.address.line1,
+      addressLine2: input.intake.address.line2,
+      city: input.intake.address.city,
+      state: input.intake.address.state,
+      postalCode: input.intake.address.postalCode,
+      county:
+        input.intake.address.county ||
+        input.intake.housing.currentLocation ||
+        'Unknown',
+    }))
+
+  const caseId =
+    input.mode === 'reintake' && input.existingCaseId
+      ? input.existingCaseId
+      : await insertCaseRow(db, {
+          frcId,
+          primaryPersonId: personId,
+          status: 'open',
+          risk: hasHighDuplicate ? 'medium' : 'low',
+          openedAt: createdDate,
+          lastContactAt: createdDate,
+          householdName:
+            `${input.intake.client.firstName} ${input.intake.client.lastName}`.trim(),
+        })
+
+  if (input.mode === 'reintake' && input.existingCaseId) {
+    await updateCaseStatusRow(db, input.existingCaseId, 'open')
+    await updatePrimaryIntakeRow(db, input.existingCaseId, primaryIntakeValues)
+  } else {
+    await insertPrimaryIntakeRow(db, {
+      caseId,
+      ...primaryIntakeValues,
+    })
+  }
 
   for (const contact of input.intake.relevantContacts) {
     const [firstName = '', ...lastNameParts] = contact.name.split(' ')
