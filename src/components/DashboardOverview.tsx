@@ -9,15 +9,14 @@ import {
   formatDate,
   formatCurrency,
   getProgram,
-  programs,
-} from '~/domain/demo-data'
+} from '~/domain/workspace'
 import { useDemoWorkspace } from '~/hooks/useDemoWorkspace'
 import { CaseStatusBadge, MetricTile, ProgramBadge } from './CaseworkUI'
 
 const caseStatuses = ['Open', 'Pending', 'Closed'] as const
 
 export function DashboardOverview() {
-  const { metrics, role, services, visibleCases } = useDemoWorkspace()
+  const { metrics, programs, role, services, visibleCases } = useDemoWorkspace()
   const visibleCaseIds = new Set(
     visibleCases.map((caseRecord) => caseRecord.id),
   )
@@ -162,7 +161,7 @@ export function DashboardOverview() {
                   (item) => item.id === service.enrollmentId,
                 )
                 const program = enrollment
-                  ? getProgram(enrollment.programId)
+                  ? getProgram(programs, enrollment.programId)
                   : undefined
 
                 return (

@@ -18,8 +18,8 @@ import {
 	UserRound,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import type { CaseStatus, ClientCase } from "~/domain/demo-data";
-import { formatDate, formatExactCurrency } from "~/domain/demo-data";
+import type { CaseStatus, ClientCase } from "~/domain/workspace";
+import { formatDate, formatExactCurrency } from "~/domain/workspace";
 import { RiskBadge } from "../CaseworkUI";
 import { caseStatusOptions } from "./constants";
 

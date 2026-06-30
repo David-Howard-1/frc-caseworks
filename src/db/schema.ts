@@ -1,5 +1,5 @@
-import { relations } from 'drizzle-orm'
 import {
+  bigint,
   boolean,
   date,
   decimal,
@@ -7,11 +7,19 @@ import {
   json,
   mysqlEnum,
   mysqlTable,
-  primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core'
+
+const serialId = (name = 'id') =>
+  bigint(name, { mode: 'number', unsigned: true })
+    .autoincrement()
+    .primaryKey()
+
+const foreignId = (name: string) =>
+  bigint(name, { mode: 'number', unsigned: true })
 
 export const caseStatusEnum = mysqlEnum('case_status', [
   'open',
@@ -48,7 +56,7 @@ export const peopleRoleEnum = mysqlEnum('person_role', [
 ])
 
 export const frcs = mysqlTable('frcs', {
-  id: varchar('id', { length: 64 }).primaryKey(),
+  id: serialId(),
   name: varchar('name', { length: 191 }).notNull(),
   legalName: varchar('legal_name', { length: 191 }),
   county: varchar('county', { length: 120 }),
@@ -60,8 +68,8 @@ export const frcs = mysqlTable('frcs', {
 export const users = mysqlTable(
   'users',
   {
-    id: varchar('id', { length: 64 }).primaryKey(),
-    frcId: varchar('frc_id', { length: 64 })
+    id: serialId(),
+    frcId: foreignId('frc_id')
       .notNull()
       .references(() => frcs.id),
     role: userRoleEnum.notNull(),
@@ -79,8 +87,8 @@ export const users = mysqlTable(
 export const programs = mysqlTable(
   'programs',
   {
-    id: varchar('id', { length: 64 }).primaryKey(),
-    frcId: varchar('frc_id', { length: 64 })
+    id: serialId(),
+    frcId: foreignId('frc_id')
       .notNull()
       .references(() => frcs.id),
     code: varchar('code', { length: 48 }).notNull(),
@@ -88,7 +96,7 @@ export const programs = mysqlTable(
     grantor: varchar('grantor', { length: 120 }),
     reportingType: varchar('reporting_type', { length: 80 }),
     color: varchar('color', { length: 24 }),
-    supervisorId: varchar('supervisor_id', { length: 64 }).references(
+    supervisorId: foreignId('supervisor_id').references(
       () => users.id,
     ),
     isActive: boolean('is_active').default(true).notNull(),
@@ -102,23 +110,27 @@ export const programs = mysqlTable(
 export const userPrograms = mysqlTable(
   'user_programs',
   {
-    userId: varchar('user_id', { length: 64 })
+    id: serialId(),
+    userId: foreignId('user_id')
       .notNull()
       .references(() => users.id),
-    programId: varchar('program_id', { length: 64 })
+    programId: foreignId('program_id')
       .notNull()
       .references(() => programs.id),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.userId, table.programId] }),
+    userProgramUnique: uniqueIndex('user_programs_user_program_unique').on(
+      table.userId,
+      table.programId,
+    ),
   }),
 )
 
 export const people = mysqlTable(
   'people',
   {
-    id: varchar('id', { length: 64 }).primaryKey(),
-    frcId: varchar('frc_id', { length: 64 })
+    id: serialId(),
+    frcId: foreignId('frc_id')
       .notNull()
       .references(() => frcs.id),
     personRole: peopleRoleEnum.default('client').notNull(),
@@ -152,11 +164,11 @@ export const people = mysqlTable(
 export const cases = mysqlTable(
   'cases',
   {
-    id: varchar('id', { length: 64 }).primaryKey(),
-    frcId: varchar('frc_id', { length: 64 })
+    id: serialId(),
+    frcId: foreignId('frc_id')
       .notNull()
       .references(() => frcs.id),
-    primaryPersonId: varchar('primary_person_id', { length: 64 })
+    primaryPersonId: foreignId('primary_person_id')
       .notNull()
       .references(() => people.id),
     status: caseStatusEnum.default('pending').notNull(),
@@ -180,11 +192,11 @@ export const cases = mysqlTable(
 export const primaryIntakes = mysqlTable(
   'primary_intakes',
   {
-    id: varchar('id', { length: 64 }).primaryKey(),
-    caseId: varchar('case_id', { length: 64 })
+    id: serialId(),
+    caseId: foreignId('case_id')
       .notNull()
       .references(() => cases.id),
-    completedById: varchar('completed_by_id', { length: 64 }).references(
+    completedById: foreignId('completed_by_id').references(
       () => users.id,
     ),
     intakeDate: date('intake_date', { mode: 'string' }),
@@ -206,15 +218,15 @@ export const primaryIntakes = mysqlTable(
 export const intakeSubmissions = mysqlTable(
   'intake_submissions',
   {
-    id: varchar('id', { length: 64 }).primaryKey(),
-    frcId: varchar('frc_id', { length: 64 })
+    id: serialId(),
+    frcId: foreignId('frc_id')
       .notNull()
       .references(() => frcs.id),
-    caseId: varchar('case_id', { length: 64 }).references(() => cases.id),
-    createdById: varchar('created_by_id', { length: 64 })
+    caseId: foreignId('case_id').references(() => cases.id),
+    createdById: foreignId('created_by_id')
       .notNull()
       .references(() => users.id),
-    convertedById: varchar('converted_by_id', { length: 64 }).references(
+    convertedById: foreignId('converted_by_id').references(
       () => users.id,
     ),
     status: intakeStatusEnum.default('draft').notNull(),
@@ -253,14 +265,14 @@ export const intakeSubmissions = mysqlTable(
 export const caseProgramEnrollments = mysqlTable(
   'case_program_enrollments',
   {
-    id: varchar('id', { length: 64 }).primaryKey(),
-    caseId: varchar('case_id', { length: 64 })
+    id: serialId(),
+    caseId: foreignId('case_id')
       .notNull()
       .references(() => cases.id),
-    programId: varchar('program_id', { length: 64 })
+    programId: foreignId('program_id')
       .notNull()
       .references(() => programs.id),
-    supervisorId: varchar('supervisor_id', { length: 64 }).references(
+    supervisorId: foreignId('supervisor_id').references(
       () => users.id,
     ),
     status: programEnrollmentStatusEnum.default('pending').notNull(),
@@ -282,19 +294,20 @@ export const caseProgramEnrollments = mysqlTable(
 export const caseProgramCaseworkers = mysqlTable(
   'case_program_caseworkers',
   {
-    programEnrollmentId: varchar('program_enrollment_id', { length: 64 })
+    id: serialId(),
+    programEnrollmentId: foreignId('program_enrollment_id')
       .notNull()
       .references(() => caseProgramEnrollments.id),
-    caseworkerId: varchar('caseworker_id', { length: 64 })
+    caseworkerId: foreignId('caseworker_id')
       .notNull()
       .references(() => users.id),
     isPrimary: boolean('is_primary').default(false).notNull(),
     assignedAt: timestamp('assigned_at').defaultNow().notNull(),
   },
   (table) => ({
-    pk: primaryKey({
-      columns: [table.programEnrollmentId, table.caseworkerId],
-    }),
+    enrollmentCaseworkerUnique: uniqueIndex(
+      'case_program_caseworkers_enrollment_caseworker_unique',
+    ).on(table.programEnrollmentId, table.caseworkerId),
     caseworkerIdx: index('case_program_caseworkers_caseworker_idx').on(
       table.caseworkerId,
       table.isPrimary,
@@ -308,14 +321,14 @@ export const caseProgramCaseworkers = mysqlTable(
 export const caseNotes = mysqlTable(
   'case_notes',
   {
-    id: varchar('id', { length: 64 }).primaryKey(),
-    caseId: varchar('case_id', { length: 64 })
+    id: serialId(),
+    caseId: foreignId('case_id')
       .notNull()
       .references(() => cases.id),
-    programEnrollmentId: varchar('program_enrollment_id', {
-      length: 64,
-    }).references(() => caseProgramEnrollments.id),
-    authorId: varchar('author_id', { length: 64 })
+    programEnrollmentId: foreignId('program_enrollment_id').references(
+      () => caseProgramEnrollments.id,
+    ),
+    authorId: foreignId('author_id')
       .notNull()
       .references(() => users.id),
     noteDate: date('note_date', { mode: 'string' }).notNull(),
@@ -346,14 +359,14 @@ export const caseNotes = mysqlTable(
 export const concreteServices = mysqlTable(
   'concrete_services',
   {
-    id: varchar('id', { length: 64 }).primaryKey(),
-    caseId: varchar('case_id', { length: 64 })
+    id: serialId(),
+    caseId: foreignId('case_id')
       .notNull()
       .references(() => cases.id),
-    programEnrollmentId: varchar('program_enrollment_id', {
-      length: 64,
-    }).references(() => caseProgramEnrollments.id),
-    providedById: varchar('provided_by_id', { length: 64 }).references(
+    programEnrollmentId: foreignId('program_enrollment_id').references(
+      () => caseProgramEnrollments.id,
+    ),
+    providedById: foreignId('provided_by_id').references(
       () => users.id,
     ),
     serviceDate: date('service_date', { mode: 'string' }).notNull(),
@@ -385,16 +398,16 @@ export const concreteServices = mysqlTable(
 export const personRelationships = mysqlTable(
   'person_relationships',
   {
-    id: varchar('id', { length: 64 }).primaryKey(),
-    sourcePersonId: varchar('source_person_id', { length: 64 })
+    id: serialId(),
+    sourcePersonId: foreignId('source_person_id')
       .notNull()
       .references(() => people.id),
-    relatedPersonId: varchar('related_person_id', { length: 64 })
+    relatedPersonId: foreignId('related_person_id')
       .notNull()
       .references(() => people.id),
     relationship: varchar('relationship', { length: 80 }).notNull(),
     livesInHousehold: boolean('lives_in_household').default(true).notNull(),
-    relatedCaseId: varchar('related_case_id', { length: 64 }).references(
+    relatedCaseId: foreignId('related_case_id').references(
       () => cases.id,
     ),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -412,15 +425,15 @@ export const personRelationships = mysqlTable(
 export const savedReports = mysqlTable(
   'saved_reports',
   {
-    id: varchar('id', { length: 64 }).primaryKey(),
-    frcId: varchar('frc_id', { length: 64 })
+    id: serialId(),
+    frcId: foreignId('frc_id')
       .notNull()
       .references(() => frcs.id),
     name: varchar('name', { length: 191 }).notNull(),
     grantor: varchar('grantor', { length: 120 }).notNull(),
     periodStart: date('period_start', { mode: 'string' }).notNull(),
     periodEnd: date('period_end', { mode: 'string' }).notNull(),
-    generatedById: varchar('generated_by_id', { length: 64 }).references(
+    generatedById: foreignId('generated_by_id').references(
       () => users.id,
     ),
     metrics: json('metrics').$type<Record<string, number | string>>(),
@@ -433,74 +446,3 @@ export const savedReports = mysqlTable(
     ),
   }),
 )
-
-export const frcsRelations = relations(frcs, ({ many }) => ({
-  users: many(users),
-  programs: many(programs),
-  people: many(people),
-  cases: many(cases),
-  intakeSubmissions: many(intakeSubmissions),
-}))
-
-export const usersRelations = relations(users, ({ one, many }) => ({
-  frc: one(frcs, {
-    fields: [users.frcId],
-    references: [frcs.id],
-  }),
-  supervisedPrograms: many(programs, { relationName: 'programSupervisor' }),
-  programMemberships: many(userPrograms),
-  caseworkerAssignments: many(caseProgramCaseworkers, {
-    relationName: 'caseProgramCaseworkerUser',
-  }),
-  notes: many(caseNotes),
-}))
-
-export const programsRelations = relations(programs, ({ one, many }) => ({
-  frc: one(frcs, {
-    fields: [programs.frcId],
-    references: [frcs.id],
-  }),
-  supervisor: one(users, {
-    fields: [programs.supervisorId],
-    references: [users.id],
-    relationName: 'programSupervisor',
-  }),
-  memberships: many(userPrograms),
-  enrollments: many(caseProgramEnrollments),
-}))
-
-export const userProgramsRelations = relations(userPrograms, ({ one }) => ({
-  user: one(users, {
-    fields: [userPrograms.userId],
-    references: [users.id],
-  }),
-  program: one(programs, {
-    fields: [userPrograms.programId],
-    references: [programs.id],
-  }),
-}))
-
-export const peopleRelations = relations(people, ({ one, many }) => ({
-  frc: one(frcs, {
-    fields: [people.frcId],
-    references: [frcs.id],
-  }),
-  cases: many(cases),
-  relationships: many(personRelationships, { relationName: 'sourcePerson' }),
-}))
-
-export const casesRelations = relations(cases, ({ one, many }) => ({
-  frc: one(frcs, {
-    fields: [cases.frcId],
-    references: [frcs.id],
-  }),
-  primaryPerson: one(people, {
-    fields: [cases.primaryPersonId],
-    references: [people.id],
-  }),
-  primaryIntakes: many(primaryIntakes),
-  intakeSubmissions: many(intakeSubmissions),
-  programEnrollments: many(caseProgramEnrollments),
-  notes: many(caseNotes),
-  concreteServices: many(concreteServices),
-}))

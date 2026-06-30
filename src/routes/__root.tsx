@@ -14,7 +14,9 @@ import {
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { AppFrame } from '~/components/AppFrame'
 import { DemoWorkspaceProvider } from '~/context/DemoWorkspaceContext'
 
@@ -60,15 +62,28 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+  )
+
   return (
     <RootDocument>
-      <MantineProvider theme={theme}>
-        <DemoWorkspaceProvider>
-          <AppFrame>
-            <Outlet />
-          </AppFrame>
-        </DemoWorkspaceProvider>
-      </MantineProvider>
+      <QueryClientProvider client={queryClient}>
+        <MantineProvider theme={theme}>
+          <DemoWorkspaceProvider>
+            <AppFrame>
+              <Outlet />
+            </AppFrame>
+          </DemoWorkspaceProvider>
+        </MantineProvider>
+      </QueryClientProvider>
     </RootDocument>
   )
 }

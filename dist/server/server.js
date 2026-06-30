@@ -777,13 +777,13 @@ function redirect(opts) {
 }
 /** Check whether a value is a TanStack Router redirect Response. */
 /** Check whether a value is a TanStack Router redirect Response. */
-function isRedirect$1(obj) {
+function isRedirect(obj) {
 	return obj instanceof Response && !!obj.options;
 }
 /** True if value is a redirect with a resolved `href` location. */
 /** True if value is a redirect with a resolved `href` location. */
 function isResolvedRedirect(obj) {
-	return isRedirect$1(obj) && !!obj.options.href;
+	return isRedirect(obj) && !!obj.options.href;
 }
 /** Parse a serialized redirect object back into a redirect Response. */
 /** Parse a serialized redirect object back into a redirect Response. */
@@ -3451,7 +3451,7 @@ var defaultSerovalPlugins = [
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-TA_TNy62.js");
+	const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-C_kWUpD0.js");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -3473,49 +3473,53 @@ async function getStartManifest(matchedRoutes) {
 //#endregion
 //#region \0%23tanstack-start-server-fn-resolver
 var manifest = {
-	"03267021997fe8b81778897ed57018438567f388aa36548b9760419a1b27bba8": {
-		functionName: "updateEnrollmentFn_createServerFn_handler",
-		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	"0595ebad747dfd91d0d7ad6de0e45ec0a094fafa75cd046b832c9e9e5d146187": {
+		functionName: "createEnrollmentFn_createServerFn_handler",
+		importer: () => import("./assets/workspace-G87cIdA9.js")
 	},
-	"0f0e386ebc16799934abdd675f0cef8b81c184541d3f9717ad099feaa227ac71": {
-		functionName: "addCaseworkerAssignmentFn_createServerFn_handler",
-		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
-	},
-	"1ffbb6f5a833872a182ca20f9e4125a50d2a009599e7e9ea2b5c8cc4676bb3c7": {
-		functionName: "setPrimaryCaseworkerFn_createServerFn_handler",
-		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
-	},
-	"3a459a481b7ab66e402f438e1afa46262cfae7798ac7a113a8c8f9455a2dbd65": {
+	"15425a3643c2d4efd85116d103cf5d6b77d1065c0ff5813527526ad6cb1b70f1": {
 		functionName: "editNoteFn_createServerFn_handler",
-		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+		importer: () => import("./assets/workspace-G87cIdA9.js")
 	},
-	"3e25d0d70b2beb7f08c20406aae45d51e18c27f4aca2f3b9a594bb6b3a9864bb": {
-		functionName: "addNoteFn_createServerFn_handler",
-		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
-	},
-	"43f95cfa997fdcb3a90fdd6294a5d1e9a6b7f636a06f04d4aff88769d5aed5cb": {
-		functionName: "removeCaseworkerAssignmentFn_createServerFn_handler",
-		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
-	},
-	"4cf149594f1f4f229810c3b7e475b235adb431a211a213ab6816cad471b968b8": {
+	"201edf323e0e20530e2d2a39864177726e7d18e8d047078b2fa4f80a58f4602e": {
 		functionName: "addConcreteServiceFn_createServerFn_handler",
-		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+		importer: () => import("./assets/workspace-G87cIdA9.js")
 	},
-	"a26945d43bdbc8df6e4f7021151a52b1797575133c243584ed9c61481939ed8d": {
-		functionName: "updateIntakeFieldFn_createServerFn_handler",
-		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	"54b1cbe51673a785cd9510adda0ba2c70c32f71511477d51e9fc66bffb693cde": {
+		functionName: "removeCaseworkerAssignmentFn_createServerFn_handler",
+		importer: () => import("./assets/workspace-G87cIdA9.js")
 	},
-	"b64422fd99df7ca444097916df9212b4f27a5202131063ccafb4de124a8e6325": {
+	"61c08573a3051e28ca0f34f3b695aa91de0199916e956b8d19cb9b0f765153b8": {
+		functionName: "addCaseworkerAssignmentFn_createServerFn_handler",
+		importer: () => import("./assets/workspace-G87cIdA9.js")
+	},
+	"6730d51c9ac496760d97e83dfbebdeb3105ab75ef2e3cceefbe2ff38942170d0": {
 		functionName: "loadWorkspaceFn_createServerFn_handler",
-		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+		importer: () => import("./assets/workspace-G87cIdA9.js")
 	},
-	"c654da9399de90f4e64cc1048c973787ed8ebc98935346ca79f049407b24770a": {
-		functionName: "createCaseFromIntakeFn_createServerFn_handler",
-		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+	"8893be4a641ce0bb80843bde3941a481dae5de97b9aaceb4ccee2bd45d239b1f": {
+		functionName: "setPrimaryCaseworkerFn_createServerFn_handler",
+		importer: () => import("./assets/workspace-G87cIdA9.js")
 	},
-	"e8c88b6594bea7184bf006577c6a9dd5d7beffa5473ec5e34f8de086b0df3ecf": {
+	"9aa7f3fae4ee3d25dc6f1294ecd91487430904ac52b761f1b57d678aa391144d": {
+		functionName: "updateEnrollmentFn_createServerFn_handler",
+		importer: () => import("./assets/workspace-G87cIdA9.js")
+	},
+	"a0e1e6277bc1cf03f192087085b1f1170465d350fb9671773e546042419b8ec5": {
+		functionName: "addNoteFn_createServerFn_handler",
+		importer: () => import("./assets/workspace-G87cIdA9.js")
+	},
+	"b62a7345f5295a436067386205c27babec3b5ff9d822c21d9e527d6b7ee2c577": {
 		functionName: "updateCaseStatusFn_createServerFn_handler",
-		importer: () => import("./assets/workspaceServerFns-CCW6Odsn.js")
+		importer: () => import("./assets/workspace-G87cIdA9.js")
+	},
+	"e3ddf4cf675e5e5c98e167da44b4f15a21fe12519b6b5cf3519bd6a5dc484a8e": {
+		functionName: "createCaseFromIntakeFn_createServerFn_handler",
+		importer: () => import("./assets/workspace-G87cIdA9.js")
+	},
+	"ec223ff61e50d5b7b3af8782df898724474bfd828bcc1884ef00cc4d54480d5f": {
+		functionName: "updateIntakeFieldFn_createServerFn_handler",
+		importer: () => import("./assets/workspace-G87cIdA9.js")
 	}
 };
 async function getServerFnById(id, access) {
@@ -3782,7 +3786,7 @@ async function executeMiddleware$1(middlewares, env, opts) {
 					...ctx,
 					next: userNext
 				});
-				if (isRedirect$1(result)) return {
+				if (isRedirect(result)) return {
 					...ctx,
 					error: result
 				};
@@ -4166,7 +4170,7 @@ var handleServerAction = async ({ request, context, serverFnId }) => {
 			if (isNotFound(res)) res = isNotFoundResponse(res);
 			if (!isServerFn) return unwrapped;
 			if (unwrapped instanceof Response) {
-				if (isRedirect$1(unwrapped)) return unwrapped;
+				if (isRedirect(unwrapped)) return unwrapped;
 				unwrapped.headers.set(X_TSS_RAW_RESPONSE, "true");
 				return unwrapped;
 			}
@@ -5393,7 +5397,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./assets/router-DGdHIUkd.js"),
+		import("./assets/router-DyY8oJ1r.js"),
 		import("./assets/start-AdjGxi1V.js"),
 		import("./assets/empty-plugin-adapters-32W6gJO6.js")
 	]);
@@ -5424,7 +5428,7 @@ function throwIfMayNotDefer() {
 * Check if a value is a special response (Response or Redirect)
 */
 function isSpecialResponse(value) {
-	return value instanceof Response || isRedirect$1(value);
+	return value instanceof Response || isRedirect(value);
 }
 /**
 * Normalize middleware result to context shape
@@ -5702,7 +5706,7 @@ function createStartHandler(cbOrOptions) {
 }
 async function handleRedirectResponse(response, request, getRouter) {
 	const ssrResponse = normalizeSsrResponse(response);
-	if (!isRedirect$1(ssrResponse.response)) return ssrResponse;
+	if (!isRedirect(ssrResponse.response)) return ssrResponse;
 	if (isResolvedRedirect(ssrResponse.response)) {
 		if (request.headers.get("x-tsr-serverFn") === "true") return replaceSsrResponse(ssrResponse, Response.json({
 			...ssrResponse.response.options,

@@ -1,13 +1,13 @@
 import { Badge, Box, Button, Group, Table, Text, Title } from "@mantine/core";
 import { UsersRound } from "lucide-react";
-import type { ClientCase } from "~/domain/demo-data";
+import type { ClientCase, EntityId } from "~/domain/workspace";
 
 export function RelatedPeoplePanel({
 	caseRecord,
 	onNavigateToCase,
 }: {
 	caseRecord: ClientCase;
-	onNavigateToCase: (caseId: string) => void;
+	onNavigateToCase: (caseId: EntityId) => void;
 }) {
 	return (
 		<Box className='rounded-md border border-slate-200 bg-white p-4 shadow-sm'>

@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-import type { UserRole } from '~/domain/demo-data'
+import type { UserRole } from '~/domain/workspace'
 import { useDemoWorkspace } from '~/hooks/useDemoWorkspace'
 
 const navigation: Array<{
@@ -126,14 +126,16 @@ export function AppFrame({ children }: Readonly<{ children: ReactNode }>) {
             <Select
               allowDeselect={false}
               data={staffChoices.map((person) => ({
-                value: person.id,
+                value: String(person.id),
                 label: person.name,
               }))}
+              disabled={staffChoices.length === 0}
               label="Active user"
               onChange={(value) =>
-                value ? setCurrentStaffId(value) : undefined
+                value ? setCurrentStaffId(Number(value)) : undefined
               }
-              value={currentStaffId}
+              placeholder="Add users in TablePlus"
+              value={currentStaffId ? String(currentStaffId) : null}
             />
           </Stack>
         </Stack>

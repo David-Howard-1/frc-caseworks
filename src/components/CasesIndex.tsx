@@ -12,12 +12,11 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import type { CaseStatus } from "~/domain/demo-data";
+import type { CaseStatus } from "~/domain/workspace";
 import {
 	formatDate,
 	getProgram,
-	programs,
-} from "~/domain/demo-data";
+} from "~/domain/workspace";
 import { useDemoWorkspace } from "~/hooks/useDemoWorkspace";
 import {
 	CaseStatusBadge,
@@ -35,12 +34,12 @@ const caseStatusOptions: Array<"All" | CaseStatus> = [
 ];
 
 export function CasesIndex() {
-	const { cases, currentStaffId, role, visibleCases } = useDemoWorkspace();
+	const { cases, currentStaffId, programs, role, visibleCases } = useDemoWorkspace();
 	const navigate = useNavigate();
 	const [query, setQuery] = useState("");
 	const [statusFilter, setStatusFilter] = useState<"All" | CaseStatus>("All");
 	const [page, setPage] = useState(1);
-	const [programId, setProgramId] = useState<string | null>(null);
+	const [programId, setProgramId] = useState<number | null>(null);
 
 	const supervisorPrograms = useMemo(
 		() =>
@@ -87,7 +86,7 @@ export function CasesIndex() {
 			const matchesQuery =
 				!loweredQuery ||
 				caseRecord.displayName.toLowerCase().includes(loweredQuery) ||
-				caseRecord.id.toLowerCase().includes(loweredQuery) ||
+				String(caseRecord.id).toLowerCase().includes(loweredQuery) ||
 				caseRecord.county.toLowerCase().includes(loweredQuery);
 
 			return matchesStatus && matchesQuery;
@@ -103,7 +102,7 @@ export function CasesIndex() {
 		(page - 1) * PAGE_SIZE,
 		page * PAGE_SIZE,
 	);
-	const activeProgram = programId ? getProgram(programId) : undefined;
+	const activeProgram = programId ? getProgram(programs, programId) : undefined;
 
 	return (
 		<Stack gap='lg'>
@@ -154,12 +153,14 @@ export function CasesIndex() {
 						<Select
 							allowDeselect={false}
 							data={supervisorPrograms.map((program) => ({
-								value: program.id,
-								label: program.name,
-							}))}
+				value: String(program.id),
+				label: program.name,
+			}))}
 							label='Program'
-							onChange={setProgramId}
-							value={programId}
+							onChange={(value) =>
+								setProgramId(value ? Number(value) : null)
+							}
+							value={programId ? String(programId) : null}
 							w={260}
 						/>
 					) : null}
@@ -187,7 +188,7 @@ export function CasesIndex() {
 												navigate({
 													to: "/cases/$caseId",
 													params: {
-														caseId: caseRecord.id,
+														caseId: String(caseRecord.id),
 													},
 												})
 											}
@@ -202,7 +203,7 @@ export function CasesIndex() {
 													navigate({
 														to: "/cases/$caseId",
 														params: {
-															caseId: caseRecord.id,
+															caseId: String(caseRecord.id),
 														},
 													});
 												}
@@ -230,6 +231,7 @@ export function CasesIndex() {
 															(enrollment) => {
 																const program =
 																	getProgram(
+																		programs,
 																		enrollment.programId,
 																	);
 																return (

@@ -34,11 +34,11 @@ import type {
 	IntakeContact,
 	IntakeIncomeSource,
 	IntakeSubmission,
-} from "~/domain/demo-data";
-import { formatDate } from "~/domain/demo-data";
+} from "~/domain/workspace";
+import { formatDate } from "~/domain/workspace";
 import { useDemoWorkspace } from "~/hooks/useDemoWorkspace";
 
-const TODAY = "2026-06-10";
+const today = () => new Date().toISOString().slice(0, 10);
 
 const housingOptions = [
 	"Stable housing",
@@ -340,7 +340,12 @@ export function IntakeWorkflow() {
 		]);
 	}
 
-	function saveIntake() {
+	async function saveIntake() {
+		if (!currentStaffId) {
+			setError("Add and select a user before creating casework data.");
+			return;
+		}
+
 		const { firstName, lastName } = splitLookupName(searchInput.name);
 		const hasContact = Boolean(searchInput.phone || searchInput.email);
 		const missingCore =
@@ -361,11 +366,11 @@ export function IntakeWorkflow() {
 			(match) =>
 				`${match.strength}: ${match.clientName} (${match.recordType})`,
 		);
-		const intake: IntakeSubmission = {
-			id: "pending-intake",
+		const createdDate = today();
+		const intake: Omit<IntakeSubmission, "id"> = {
 			status: matches.length > 0 ? "Duplicate Review" : "Draft",
 			createdById: currentStaffId,
-			startedAt: `${TODAY}T09:00:00`,
+			startedAt: `${createdDate}T09:00:00`,
 			duplicateWarnings,
 			duplicateOverrideReason: form.overrideReason || undefined,
 			client: {
@@ -435,8 +440,10 @@ export function IntakeWorkflow() {
 			},
 		};
 
-		const caseId = createCaseFromIntake(intake);
-		navigate({ to: "/cases/$caseId", params: { caseId } });
+		const caseId = await createCaseFromIntake(intake);
+		if (caseId) {
+			navigate({ to: "/cases/$caseId", params: { caseId: String(caseId) } });
+		}
 	}
 
 	return (

@@ -1,110 +1,96 @@
-import { useServerFn } from '@tanstack/react-start'
+import { useQuery } from '@tanstack/react-query'
 import { createContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import type {
+  CaseNote,
+  CaseProgramEnrollment,
+  CaseStatus,
+  ClientCase,
+  ConcreteService,
+  EntityId,
+  Frc,
+  Intake,
+  IntakeSubmission,
+  Program,
+  ProgramStatus,
+  Staff,
+  UserRole,
+} from '~/domain/workspace'
 import {
-  type CaseNote,
-  type CaseProgramEnrollment,
-  type CaseStatus,
-  type ClientCase,
-  type ConcreteService,
-  type Intake,
-  type IntakeSubmission,
-  type ProgramStatus,
-  type UserRole,
   calculateMetrics,
+  emptyWorkspaceSnapshot,
   getProgram,
-  initialWorkspaceSnapshot,
-  staff,
   visibleCasesForRole,
-  type WorkspaceSnapshot,
-} from '~/domain/demo-data'
+} from '~/domain/workspace'
 import {
-  addCaseworkerAssignmentFn,
-  addConcreteServiceFn,
-  addNoteFn,
-  createCaseFromIntakeFn,
-  editNoteFn,
-  loadWorkspaceFn,
-  removeCaseworkerAssignmentFn,
-  setPrimaryCaseworkerFn,
-  updateCaseStatusFn,
-  updateEnrollmentFn,
-  updateIntakeFieldFn,
-} from '~/use-cases/workspaceServerFns'
-
-const TODAY = '2026-06-10'
-
-const roleDefaults: Record<UserRole, string> = {
-  Caseworker: 'u-1',
-  'Program Supervisor': 'u-2',
-  'Executive Director': 'u-5',
-}
-
-const normalize = (value?: string) => value?.trim().toLowerCase() ?? ''
-const normalizePhone = (value?: string) => value?.replace(/\D/g, '') ?? ''
-const normalizeSsn = (value?: string) => value?.replace(/\D/g, '') ?? ''
-
-export type AddNoteInput = {
-  enrollmentId: string
-  contactType: string
-  summary: string
-  body: string
-  isSession: boolean
-  sessionHours?: number
-}
+  useAddCaseworkerAssignmentMutation,
+  useAddConcreteServiceMutation,
+  useAddNoteMutation,
+  useCreateCaseFromIntakeMutation,
+  useCreateEnrollmentMutation,
+  useEditNoteMutation,
+  useRemoveCaseworkerAssignmentMutation,
+  useSetPrimaryCaseworkerMutation,
+  useUpdateCaseStatusMutation,
+  useUpdateEnrollmentMutation,
+  useUpdateIntakeFieldMutation,
+} from '~/hooks/useWorkspaceMutations'
+import { workspaceSnapshotQueryOptions } from '~/queries/workspace'
+import type {
+  AddNoteInput,
+  AddServiceInput,
+  CreateEnrollmentInput,
+} from '~/schema/workspace'
 
 export type EditNoteInput = AddNoteInput
 
-export type AddServiceInput = {
-  enrollmentId: string
-  category: string
-  description: string
-  amount: number
-}
-
 export type DemoWorkspaceContextValue = {
+  frcs: Frc[]
+  programs: Program[]
+  staff: Staff[]
   cases: ClientCase[]
   notes: CaseNote[]
   services: ConcreteService[]
   role: UserRole
-  currentStaffId: string
-  staffChoices: typeof staff
+  currentStaffId?: EntityId
+  staffChoices: Staff[]
   visibleCases: ClientCase[]
   intakeSubmissions: IntakeSubmission[]
   metrics: ReturnType<typeof calculateMetrics>
   setRole: (role: UserRole) => void
-  setCurrentStaffId: (staffId: string) => void
-  updateCaseStatus: (caseId: string, status: CaseStatus) => void
+  setCurrentStaffId: (staffId: EntityId) => void
+  updateCaseStatus: (caseId: EntityId, status: CaseStatus) => void
   updateEnrollment: (
-    caseId: string,
-    enrollmentId: string,
+    caseId: EntityId,
+    enrollmentId: EntityId,
     patch: Partial<CaseProgramEnrollment>,
   ) => void
   addCaseworkerAssignment: (
-    caseId: string,
-    enrollmentId: string,
-    staffId: string,
+    caseId: EntityId,
+    enrollmentId: EntityId,
+    staffId: EntityId,
   ) => void
+  createEnrollment: (input: CreateEnrollmentInput) => void
   removeCaseworkerAssignment: (
-    caseId: string,
-    enrollmentId: string,
-    staffId: string,
+    caseId: EntityId,
+    enrollmentId: EntityId,
+    staffId: EntityId,
   ) => void
   setPrimaryCaseworker: (
-    caseId: string,
-    enrollmentId: string,
-    staffId: string,
+    caseId: EntityId,
+    enrollmentId: EntityId,
+    staffId: EntityId,
   ) => void
   updateIntakeField: (
-    caseId: string,
+    caseId: EntityId,
     field: keyof Intake,
     value: string,
   ) => void
   findIntakeMatches: (input: IntakeMatchInput) => IntakeMatch[]
-  createCaseFromIntake: (input: IntakeSubmission) => string
-  addNote: (caseId: string, input: AddNoteInput) => void
-  editNote: (noteId: string, input: EditNoteInput) => void
-  addConcreteService: (caseId: string, input: AddServiceInput) => void
+  createCaseFromIntake: (input: Omit<IntakeSubmission, 'id'>) => Promise<EntityId | undefined>
+  addNote: (caseId: EntityId, input: AddNoteInput) => void
+  editNote: (noteId: EntityId, input: EditNoteInput) => void
+  addConcreteService: (caseId: EntityId, input: AddServiceInput) => void
 }
 
 export const DemoWorkspaceContext =
@@ -120,7 +106,7 @@ export type IntakeMatchInput = {
 }
 
 export type IntakeMatch = {
-  id: string
+  id: EntityId
   recordType: 'Case' | 'Intake'
   clientName: string
   dateOfBirth?: string
@@ -133,59 +119,49 @@ export type IntakeMatch = {
   strength: 'High confidence' | 'Medium confidence' | 'Low confidence'
 }
 
+const normalize = (value?: string) => value?.trim().toLowerCase() ?? ''
+const normalizePhone = (value?: string) => value?.replace(/\D/g, '') ?? ''
+const normalizeSsn = (value?: string) => value?.replace(/\D/g, '') ?? ''
+
 export function DemoWorkspaceProvider({
   children,
-  initialSnapshot = initialWorkspaceSnapshot,
-}: Readonly<{ children: ReactNode; initialSnapshot?: WorkspaceSnapshot }>) {
-  const loadWorkspace = useServerFn(loadWorkspaceFn)
-  const persistUpdateCaseStatus = useServerFn(updateCaseStatusFn)
-  const persistUpdateEnrollment = useServerFn(updateEnrollmentFn)
-  const persistAddCaseworkerAssignment = useServerFn(addCaseworkerAssignmentFn)
-  const persistRemoveCaseworkerAssignment = useServerFn(
-    removeCaseworkerAssignmentFn,
-  )
-  const persistSetPrimaryCaseworker = useServerFn(setPrimaryCaseworkerFn)
-  const persistUpdateIntakeField = useServerFn(updateIntakeFieldFn)
-  const persistAddNote = useServerFn(addNoteFn)
-  const persistEditNote = useServerFn(editNoteFn)
-  const persistAddConcreteService = useServerFn(addConcreteServiceFn)
-  const persistCreateCaseFromIntake = useServerFn(createCaseFromIntakeFn)
-
-  const [cases, setCases] = useState<ClientCase[]>(initialSnapshot.cases)
-  const [intakeSubmissions, setIntakeSubmissions] = useState<
-    IntakeSubmission[]
-  >(initialSnapshot.intakeSubmissions)
-  const [notes, setNotes] = useState<CaseNote[]>(initialSnapshot.notes)
-  const [services, setServices] =
-    useState<ConcreteService[]>(initialSnapshot.services)
+}: Readonly<{ children: ReactNode }>) {
+  const { data = emptyWorkspaceSnapshot } = useQuery(workspaceSnapshotQueryOptions())
   const [role, setRole] = useState<UserRole>('Caseworker')
-  const [currentStaffId, setCurrentStaffId] = useState(roleDefaults.Caseworker)
+  const [currentStaffId, setCurrentStaffId] = useState<EntityId | undefined>()
 
-  useEffect(() => {
-    setCurrentStaffId(roleDefaults[role])
-  }, [role])
-
-  useEffect(() => {
-    void loadWorkspace()
-      .then((snapshot) => {
-        setCases(snapshot.cases)
-        setIntakeSubmissions(snapshot.intakeSubmissions)
-        setNotes(snapshot.notes)
-        setServices(snapshot.services)
-      })
-      .catch((error) => {
-        console.error('Unable to load persisted workspace.', error)
-      })
-  }, [loadWorkspace])
+  const updateCaseStatusMutation = useUpdateCaseStatusMutation()
+  const updateEnrollmentMutation = useUpdateEnrollmentMutation()
+  const addCaseworkerAssignmentMutation = useAddCaseworkerAssignmentMutation()
+  const createEnrollmentMutation = useCreateEnrollmentMutation()
+  const removeCaseworkerAssignmentMutation =
+    useRemoveCaseworkerAssignmentMutation()
+  const setPrimaryCaseworkerMutation = useSetPrimaryCaseworkerMutation()
+  const updateIntakeFieldMutation = useUpdateIntakeFieldMutation()
+  const addNoteMutation = useAddNoteMutation()
+  const editNoteMutation = useEditNoteMutation()
+  const addConcreteServiceMutation = useAddConcreteServiceMutation()
+  const createCaseFromIntakeMutation = useCreateCaseFromIntakeMutation()
 
   const staffChoices = useMemo(
-    () => staff.filter((person) => person.role === role),
-    [role],
+    () => data.staff.filter((person) => person.role === role),
+    [data.staff, role],
   )
 
+  useEffect(() => {
+    if (
+      currentStaffId &&
+      staffChoices.some((person) => person.id === currentStaffId)
+    ) {
+      return
+    }
+
+    setCurrentStaffId(staffChoices[0]?.id)
+  }, [currentStaffId, staffChoices])
+
   const visibleCases = useMemo(
-    () => visibleCasesForRole(cases, role, currentStaffId),
-    [cases, currentStaffId, role],
+    () => visibleCasesForRole(data.cases, role, currentStaffId),
+    [currentStaffId, data.cases, role],
   )
 
   const visibleCaseIds = useMemo(
@@ -194,13 +170,13 @@ export function DemoWorkspaceProvider({
   )
 
   const visibleNotes = useMemo(
-    () => notes.filter((note) => visibleCaseIds.has(note.caseId)),
-    [notes, visibleCaseIds],
+    () => data.notes.filter((note) => visibleCaseIds.has(note.caseId)),
+    [data.notes, visibleCaseIds],
   )
 
   const visibleServices = useMemo(
-    () => services.filter((service) => visibleCaseIds.has(service.caseId)),
-    [services, visibleCaseIds],
+    () => data.services.filter((service) => visibleCaseIds.has(service.caseId)),
+    [data.services, visibleCaseIds],
   )
 
   const metrics = useMemo(
@@ -208,202 +184,69 @@ export function DemoWorkspaceProvider({
     [visibleCases, visibleNotes, visibleServices],
   )
 
-  function updateCaseStatus(caseId: string, status: CaseStatus) {
-    setCases((currentCases) =>
-      currentCases.map((caseRecord) =>
-        caseRecord.id === caseId
-          ? {
-              ...caseRecord,
-              status,
-              lastContact: TODAY,
-            }
-          : caseRecord,
-      ),
-    )
-    void persistUpdateCaseStatus({ data: { caseId, status } }).catch((error) => {
-      console.error('Unable to persist case status.', error)
-    })
+  function updateCaseStatus(caseId: EntityId, status: CaseStatus) {
+    updateCaseStatusMutation.mutate({ caseId, status })
   }
 
   function updateEnrollment(
-    caseId: string,
-    enrollmentId: string,
+    _caseId: EntityId,
+    enrollmentId: EntityId,
     patch: Partial<CaseProgramEnrollment>,
   ) {
-    setCases((currentCases) =>
-      currentCases.map((caseRecord) =>
-        caseRecord.id === caseId
-          ? {
-              ...caseRecord,
-              status:
-                patch.status === 'Active' && caseRecord.status === 'Pending'
-                  ? 'Open'
-                  : caseRecord.status,
-              enrollments: caseRecord.enrollments.map((enrollment) =>
-                enrollment.id === enrollmentId
-                  ? { ...enrollment, ...patch }
-                  : enrollment,
-              ),
-            }
-          : caseRecord,
-      ),
-    )
-    void persistUpdateEnrollment({
-      data: { enrollmentId, patch },
-    }).catch((error) => {
-      console.error('Unable to persist enrollment update.', error)
+    updateEnrollmentMutation.mutate({
+      enrollmentId,
+      patch: {
+        goal: patch.goal,
+        opened: patch.opened,
+        status: patch.status as ProgramStatus | undefined,
+        target: patch.target,
+      },
     })
   }
 
   function addCaseworkerAssignment(
-    caseId: string,
-    enrollmentId: string,
-    staffId: string,
+    caseId: EntityId,
+    enrollmentId: EntityId,
+    staffId: EntityId,
   ) {
-    const caseRecord = cases.find((item) => item.id === caseId)
+    const caseRecord = data.cases.find((item) => item.id === caseId)
     const enrollment = caseRecord?.enrollments.find(
       (item) => item.id === enrollmentId,
     )
 
-    setCases((currentCases) =>
-      currentCases.map((caseRecord) =>
-        caseRecord.id === caseId
-          ? {
-              ...caseRecord,
-              enrollments: caseRecord.enrollments.map((enrollment) => {
-                if (
-                  enrollment.id !== enrollmentId ||
-                  enrollment.caseworkers.some(
-                    (assignment) => assignment.staffId === staffId,
-                  )
-                ) {
-                  return enrollment
-                }
+    addCaseworkerAssignmentMutation.mutate({
+      enrollmentId,
+      staffId,
+      isFirstAssignment: (enrollment?.caseworkers.length ?? 0) === 0,
+    })
+  }
 
-                return {
-                  ...enrollment,
-                  caseworkers: [
-                    ...enrollment.caseworkers,
-                    {
-                      staffId,
-                      isPrimary: enrollment.caseworkers.length === 0,
-                    },
-                  ],
-                }
-              }),
-            }
-          : caseRecord,
-      ),
-    )
-
-    if (enrollment) {
-      void persistAddCaseworkerAssignment({
-        data: { enrollment, staffId },
-      }).catch((error) => {
-        console.error('Unable to persist caseworker assignment.', error)
-      })
-    }
+  function createEnrollment(input: CreateEnrollmentInput) {
+    createEnrollmentMutation.mutate(input)
   }
 
   function removeCaseworkerAssignment(
-    caseId: string,
-    enrollmentId: string,
-    staffId: string,
+    _caseId: EntityId,
+    enrollmentId: EntityId,
+    staffId: EntityId,
   ) {
-    setCases((currentCases) =>
-      currentCases.map((caseRecord) =>
-        caseRecord.id === caseId
-          ? {
-              ...caseRecord,
-              enrollments: caseRecord.enrollments.map((enrollment) => {
-                if (enrollment.id !== enrollmentId) {
-                  return enrollment
-                }
-
-                const remaining = enrollment.caseworkers.filter(
-                  (assignment) => assignment.staffId !== staffId,
-                )
-                const hasPrimary = remaining.some(
-                  (assignment) => assignment.isPrimary,
-                )
-
-                return {
-                  ...enrollment,
-                  caseworkers: remaining.map((assignment, index) => ({
-                    ...assignment,
-                    isPrimary: hasPrimary
-                      ? assignment.isPrimary
-                      : index === 0,
-                  })),
-                }
-              }),
-            }
-          : caseRecord,
-      ),
-    )
-    void persistRemoveCaseworkerAssignment({
-      data: { enrollmentId, staffId },
-    }).catch((error) => {
-      console.error('Unable to persist caseworker removal.', error)
-    })
+    removeCaseworkerAssignmentMutation.mutate({ enrollmentId, staffId })
   }
 
   function setPrimaryCaseworker(
-    caseId: string,
-    enrollmentId: string,
-    staffId: string,
+    _caseId: EntityId,
+    enrollmentId: EntityId,
+    staffId: EntityId,
   ) {
-    setCases((currentCases) =>
-      currentCases.map((caseRecord) =>
-        caseRecord.id === caseId
-          ? {
-              ...caseRecord,
-              enrollments: caseRecord.enrollments.map((enrollment) =>
-                enrollment.id === enrollmentId
-                  ? {
-                      ...enrollment,
-                      caseworkers: enrollment.caseworkers.map((assignment) => ({
-                        ...assignment,
-                        isPrimary: assignment.staffId === staffId,
-                      })),
-                    }
-                  : enrollment,
-              ),
-            }
-          : caseRecord,
-      ),
-    )
-    void persistSetPrimaryCaseworker({
-      data: { enrollmentId, staffId },
-    }).catch((error) => {
-      console.error('Unable to persist primary caseworker.', error)
-    })
+    setPrimaryCaseworkerMutation.mutate({ enrollmentId, staffId })
   }
 
   function updateIntakeField(
-    caseId: string,
+    caseId: EntityId,
     field: keyof Intake,
     value: string,
   ) {
-    setCases((currentCases) =>
-      currentCases.map((caseRecord) =>
-        caseRecord.id === caseId
-          ? {
-              ...caseRecord,
-              intake: {
-                ...caseRecord.intake,
-                [field]: value,
-              },
-              lastContact: TODAY,
-            }
-          : caseRecord,
-      ),
-    )
-    void persistUpdateIntakeField({
-      data: { caseId, field, value },
-    }).catch((error) => {
-      console.error('Unable to persist intake field.', error)
-    })
+    updateIntakeFieldMutation.mutate({ caseId, field, value })
   }
 
   function findIntakeMatches(input: IntakeMatchInput) {
@@ -424,53 +267,53 @@ export function DemoWorkspaceProvider({
       return []
     }
 
-    const caseMatches = cases.reduce<IntakeMatch[]>((matches, caseRecord) => {
-        const [caseFirstName = '', ...rest] = caseRecord.displayName.split(' ')
-        const caseLastName = rest.at(-1) ?? ''
-        const intake = caseRecord.intake
-        const nameScore =
-          (firstName && normalize(caseFirstName).startsWith(firstName)) ||
-          (lastName && normalize(caseLastName).startsWith(lastName))
-        const exactContact =
-          (phone && normalizePhone(intake.phone) === phone) ||
-          (email && normalize(intake.email) === email)
-        if (!nameScore && !exactContact) {
-          return matches
-        }
-
-        const strength: IntakeMatch['strength'] = exactContact
-          ? 'High confidence'
-          : firstName && lastName && nameScore
-            ? 'Medium confidence'
-            : 'Low confidence'
-
-        const firstEnrollment = caseRecord.enrollments[0]
-        const program = firstEnrollment
-          ? getProgram(firstEnrollment.programId)
-          : undefined
-        const primaryStaffId = firstEnrollment?.caseworkers.find(
-          (assignment) => assignment.isPrimary,
-        )?.staffId
-
-        matches.push({
-          id: caseRecord.id,
-          recordType: 'Case',
-          clientName: caseRecord.displayName,
-          phone: intake.phone,
-          email: intake.email,
-          caseStatus: caseRecord.status,
-          programArea: program?.name ?? 'No program assigned',
-          lastUpdated: caseRecord.lastContact,
-          assignedStaff: primaryStaffId
-            ? staff.find((person) => person.id === primaryStaffId)?.name
-            : undefined,
-          strength,
-        })
-
+    const caseMatches = data.cases.reduce<IntakeMatch[]>((matches, caseRecord) => {
+      const [caseFirstName = '', ...rest] = caseRecord.displayName.split(' ')
+      const caseLastName = rest.at(-1) ?? ''
+      const intake = caseRecord.intake
+      const nameScore =
+        (firstName && normalize(caseFirstName).startsWith(firstName)) ||
+        (lastName && normalize(caseLastName).startsWith(lastName))
+      const exactContact =
+        (phone && normalizePhone(intake.phone) === phone) ||
+        (email && normalize(intake.email) === email)
+      if (!nameScore && !exactContact) {
         return matches
-      }, [])
+      }
 
-    const intakeMatches = intakeSubmissions
+      const strength: IntakeMatch['strength'] = exactContact
+        ? 'High confidence'
+        : firstName && lastName && nameScore
+          ? 'Medium confidence'
+          : 'Low confidence'
+
+      const firstEnrollment = caseRecord.enrollments[0]
+      const program = firstEnrollment
+        ? getProgram(data.programs, firstEnrollment.programId)
+        : undefined
+      const primaryStaffId = firstEnrollment?.caseworkers.find(
+        (assignment) => assignment.isPrimary,
+      )?.staffId
+
+      matches.push({
+        id: caseRecord.id,
+        recordType: 'Case',
+        clientName: caseRecord.displayName,
+        phone: intake.phone,
+        email: intake.email,
+        caseStatus: caseRecord.status,
+        programArea: program?.name ?? 'No program assigned',
+        lastUpdated: caseRecord.lastContact,
+        assignedStaff: primaryStaffId
+          ? data.staff.find((person) => person.id === primaryStaffId)?.name
+          : undefined,
+        strength,
+      })
+
+      return matches
+    }, [])
+
+    const intakeMatches = data.intakeSubmissions
       .filter((submission) => submission.status !== 'Converted to Case')
       .reduce<IntakeMatch[]>((matches, submission) => {
         const exactContact =
@@ -500,8 +343,9 @@ export function DemoWorkspaceProvider({
           email: submission.client.email,
           programArea: 'Draft intake',
           lastUpdated: submission.savedAt ?? submission.startedAt,
-          assignedStaff: staff.find((person) => person.id === submission.createdById)
-            ?.name,
+          assignedStaff: data.staff.find(
+            (person) => person.id === submission.createdById,
+          )?.name,
           strength:
             exactContact || exactSsn ? 'High confidence' : 'Medium confidence',
         })
@@ -512,219 +356,65 @@ export function DemoWorkspaceProvider({
     return [...caseMatches, ...intakeMatches]
   }
 
-  function createCaseFromIntake(input: IntakeSubmission) {
-    const timestamp = Date.now()
-    const newCaseId = `case-${timestamp}`
-    const newPersonId = `person-${timestamp}`
-    const newIntakeId = `intake-${timestamp}`
-    const displayName = `${input.client.firstName.trim()} ${input.client.lastName.trim()}`
-    const age = Number(input.client.approximateAge) || 0
-    const hasHighDuplicate = input.duplicateWarnings.some((warning) =>
-      warning.includes('High confidence'),
-    )
-
-    const caseRecord: ClientCase = {
-      id: newCaseId,
-      personId: newPersonId,
-      displayName,
-      pronouns: undefined,
-      age,
-      status: 'Open',
-      opened: input.savedAt?.slice(0, 10) ?? TODAY,
-      lastContact: input.savedAt?.slice(0, 10) ?? TODAY,
-      risk: hasHighDuplicate ? 'Medium' : 'Low',
-      county: input.address.county || input.housing.currentLocation || 'Unknown',
-      intake: {
-        intakeDate: input.savedAt?.slice(0, 10) ?? TODAY,
-        referralSource: 'New intake workflow',
-        county: input.address.county,
-        phone: input.client.phone,
-        email: input.client.email,
-        householdIncome: input.incomeSources
-          .map((source) => `${source.type}: ${source.amount} ${source.frequency}`)
-          .join('; '),
-        housing: input.housing.status,
-        strengths: input.demographics.primaryLanguage
-          ? `Primary language: ${input.demographics.primaryLanguage}`
-          : undefined,
-        needs: [
-          input.legal.hasCourtInvolvement
-            ? `Legal: ${input.legal.matterType || 'court involvement'}`
-            : undefined,
-          input.benefits.length > 0
-            ? `Benefits: ${input.benefits.map((benefit) => benefit.type).join(', ')}`
-            : undefined,
-          input.housing.notes,
-        ]
-          .filter(Boolean)
-          .join('; '),
-      },
-      enrollments: [],
-      relatedPeople: input.relevantContacts.map((contact) => ({
-        id: contact.id,
-        name: contact.name,
-        relationship: contact.relationship,
-        age: 0,
-        inHousehold: false,
-      })),
+  async function createCaseFromIntake(input: Omit<IntakeSubmission, 'id'>) {
+    if (!currentStaffId) {
+      return undefined
     }
 
-    setCases((currentCases) => [caseRecord, ...currentCases])
-    setIntakeSubmissions((currentSubmissions) => [
-      {
-        ...input,
-        id: newIntakeId,
-        status: 'Converted to Case',
-        caseId: newCaseId,
-        convertedById: currentStaffId,
-        savedAt: `${TODAY}T10:30:00`,
-      },
-      ...currentSubmissions,
-    ])
-
-    void persistCreateCaseFromIntake({
-      data: {
-        intake: input,
-        currentStaffId,
-        caseId: newCaseId,
-        intakeId: newIntakeId,
-        personId: newPersonId,
-      },
-    }).catch((error) => {
-      console.error('Unable to persist intake conversion.', error)
-    })
-
-    return newCaseId
-  }
-
-  function addNote(caseId: string, input: AddNoteInput) {
-    if (!input.enrollmentId || !input.body.trim()) {
-      return
-    }
-
-    const noteId = `note-${Date.now()}`
-    setNotes((currentNotes) => [
-      {
-        id: noteId,
-        caseId,
-        enrollmentId: input.enrollmentId,
-        authorId: currentStaffId,
-        date: TODAY,
-        contactType: input.contactType,
-        summary: input.summary.trim() || 'Case note',
-        body: input.body.trim(),
-        isSession: input.isSession,
-        sessionHours: input.isSession ? input.sessionHours : undefined,
-      },
-      ...currentNotes,
-    ])
-    setCases((currentCases) =>
-      currentCases.map((caseRecord) =>
-        caseRecord.id === caseId
-          ? { ...caseRecord, lastContact: TODAY }
-          : caseRecord,
-      ),
-    )
-    void persistAddNote({
-      data: {
-        caseId,
-        currentStaffId,
-        note: input,
-        noteId,
-      },
-    }).catch((error) => {
-      console.error('Unable to persist case note.', error)
+    return createCaseFromIntakeMutation.mutateAsync({
+      intake: input,
+      currentStaffId,
     })
   }
 
-  function editNote(noteId: string, input: EditNoteInput) {
-    if (!input.enrollmentId || !input.body.trim()) {
+  function addNote(caseId: EntityId, input: AddNoteInput) {
+    if (!currentStaffId) {
       return
     }
 
-    setNotes((currentNotes) =>
-      currentNotes.map((note) =>
-        note.id === noteId
-          ? {
-              ...note,
-              enrollmentId: input.enrollmentId,
-              contactType: input.contactType,
-              summary: input.summary.trim() || 'Case note',
-              body: input.body.trim(),
-              isSession: input.isSession,
-              sessionHours: input.isSession ? input.sessionHours : undefined,
-            }
-          : note,
-      ),
-    )
-    void persistEditNote({
-      data: {
-        noteId,
-        note: input,
-      },
-    }).catch((error) => {
-      console.error('Unable to persist note edit.', error)
+    addNoteMutation.mutate({
+      caseId,
+      currentStaffId,
+      note: input,
     })
   }
 
-  function addConcreteService(caseId: string, input: AddServiceInput) {
-    if (!input.enrollmentId || !input.description.trim() || input.amount <= 0) {
+  function editNote(noteId: EntityId, input: EditNoteInput) {
+    editNoteMutation.mutate({ noteId, note: input })
+  }
+
+  function addConcreteService(caseId: EntityId, input: AddServiceInput) {
+    if (!currentStaffId) {
       return
     }
 
-    const caseRecord = cases.find((item) => item.id === caseId)
-    if (!caseRecord) {
-      return
-    }
-
-    const enrollment = caseRecord?.enrollments.find(
-      (item) => item.id === input.enrollmentId,
-    )
-    const program = enrollment ? getProgram(enrollment.programId) : undefined
-
-    const serviceId = `svc-${Date.now()}`
-
-    setServices((currentServices) => [
-      {
-        id: serviceId,
-        caseId,
-        enrollmentId: input.enrollmentId,
-        date: TODAY,
-        category: input.category,
-        description: input.description.trim(),
-        amount: input.amount,
-        grantor: program?.grantor ?? 'Private Foundation',
-      },
-      ...currentServices,
-    ])
-    void persistAddConcreteService({
-      data: {
-        caseRecord,
-        currentStaffId,
-        service: input,
-        serviceId,
-      },
-    }).catch((error) => {
-      console.error('Unable to persist concrete service.', error)
+    addConcreteServiceMutation.mutate({
+      caseId,
+      currentStaffId,
+      service: input,
     })
   }
 
   const value = useMemo(
     () => ({
-      cases,
-      notes,
-      services,
+      frcs: data.frcs,
+      programs: data.programs,
+      staff: data.staff,
+      cases: data.cases,
+      notes: data.notes,
+      services: data.services,
       role,
       currentStaffId,
       staffChoices,
       visibleCases,
-      intakeSubmissions,
+      intakeSubmissions: data.intakeSubmissions,
       metrics,
       setRole,
       setCurrentStaffId,
       updateCaseStatus,
       updateEnrollment,
       addCaseworkerAssignment,
+      createEnrollment,
       removeCaseworkerAssignment,
       setPrimaryCaseworker,
       updateIntakeField,
@@ -735,13 +425,10 @@ export function DemoWorkspaceProvider({
       addConcreteService,
     }),
     [
-      cases,
       currentStaffId,
-      intakeSubmissions,
+      data,
       metrics,
-      notes,
       role,
-      services,
       staffChoices,
       visibleCases,
     ],

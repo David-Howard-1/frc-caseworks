@@ -1,5 +1,5 @@
 import { Modal, Stack } from "@mantine/core";
-import type { ClientCase } from "~/domain/demo-data";
+import type { ClientCase } from "~/domain/workspace";
 import { InfoLine } from "./InfoLine";
 
 export function ClientInfoModal({

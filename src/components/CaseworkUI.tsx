@@ -5,7 +5,7 @@ import type {
   ClientCase,
   Program,
   ProgramStatus,
-} from '~/domain/demo-data'
+} from '~/domain/workspace'
 
 export function MetricTile({
   icon: Icon,

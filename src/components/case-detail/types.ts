@@ -2,17 +2,17 @@ import type {
 	CaseNote,
 	ConcreteService,
 	Program,
-} from "~/domain/demo-data";
+} from "~/domain/workspace";
 
 export type EnrollmentOption = {
 	value: string;
 	label: string;
 };
 
-export type EnrollmentPrograms = Record<string, Program | undefined>;
+export type EnrollmentPrograms = Record<number, Program | undefined>;
 
 export type NoteDraft = {
-	enrollmentId: string;
+	enrollmentId: number | "";
 	contactType: string;
 	summary: string;
 	body: string;
@@ -21,7 +21,7 @@ export type NoteDraft = {
 };
 
 export type ServiceDraft = {
-	enrollmentId: string;
+	enrollmentId: number | "";
 	category: string;
 	description: string;
 	amount: number | "";
@@ -34,7 +34,7 @@ export type ProgramService = Pick<
 	"id" | "enrollmentId" | "date" | "category" | "description" | "amount"
 >;
 
-export function createEmptyNoteDraft(enrollmentId = ""): NoteDraft {
+export function createEmptyNoteDraft(enrollmentId: number | "" = ""): NoteDraft {
 	return {
 		enrollmentId,
 		contactType: "Phone",

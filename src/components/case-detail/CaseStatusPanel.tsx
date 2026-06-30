@@ -1,6 +1,6 @@
 import { Box, Select, SimpleGrid, Title, Group } from "@mantine/core";
-import type { CaseStatus, ClientCase } from "~/domain/demo-data";
-import { formatDate, formatExactCurrency } from "~/domain/demo-data";
+import type { CaseStatus, ClientCase } from "~/domain/workspace";
+import { formatDate, formatExactCurrency } from "~/domain/workspace";
 import { RiskBadge } from "../CaseworkUI";
 import { caseStatusOptions } from "./constants";
 import { StatusTile } from "./StatusTile";

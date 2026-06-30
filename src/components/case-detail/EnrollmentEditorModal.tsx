@@ -14,7 +14,7 @@ import type {
 	CaseProgramEnrollment,
 	ProgramStatus,
 	Staff,
-} from "~/domain/demo-data";
+} from "~/domain/workspace";
 import { programStatusOptions } from "./constants";
 import type { EnrollmentOption } from "./types";
 
@@ -43,8 +43,8 @@ export function EnrollmentEditorModal({
 	onCaseworkerToAddChange: (value: string | null) => void;
 	onClose: () => void;
 	onGoalChange: (goal: string) => void;
-	onMakePrimary: (staffId: string) => void;
-	onRemoveCaseworker: (staffId: string) => void;
+	onMakePrimary: (staffId: number) => void;
+	onRemoveCaseworker: (staffId: number) => void;
 	onStatusChange: (status: ProgramStatus) => void;
 	opened: boolean;
 }) {
