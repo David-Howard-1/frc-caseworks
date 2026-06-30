@@ -1,4 +1,4 @@
-import type { CaseStatus, ProgramStatus } from "~/domain/demo-data";
+import type { CaseStatus, ProgramStatus } from "~/domain/workspace";
 
 export const caseStatusOptions: CaseStatus[] = ["Open", "Pending", "Closed"];
 

@@ -10,7 +10,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { DollarSign } from "lucide-react";
-import { formatDate, formatExactCurrency } from "~/domain/demo-data";
+import { formatDate, formatExactCurrency } from "~/domain/workspace";
 import { EmptyState, ProgramBadge } from "../CaseworkUI";
 import { serviceCategories } from "./constants";
 import type {
@@ -49,10 +49,14 @@ export function ConcreteServicesPortal({
 						onChange={(value) =>
 							onDraftChange({
 								...serviceDraft,
-								enrollmentId: value ?? "",
+								enrollmentId: value ? Number(value) : "",
 							})
 						}
-						value={serviceDraft.enrollmentId}
+						value={
+							serviceDraft.enrollmentId
+								? String(serviceDraft.enrollmentId)
+								: null
+						}
 					/>
 					<Select
 						allowDeselect={false}
@@ -124,7 +128,7 @@ export function ConcreteServicesPortal({
 										<ProgramBadge
 											program={
 												enrollmentPrograms[
-													service.enrollmentId
+													service.enrollmentId ?? 0
 												]
 											}
 										/>

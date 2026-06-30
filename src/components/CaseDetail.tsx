@@ -1,14 +1,13 @@
-import { Box, Button, Stack, Text } from "@mantine/core";
+import { Box, Button, Group, Select, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ClipboardList } from "lucide-react";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
-import type { CaseStatus, Program } from "~/domain/demo-data";
+import type { CaseStatus, Program } from "~/domain/workspace";
 import {
 	getAssignedCaseworkers,
 	getProgram,
-	staff,
-} from "~/domain/demo-data";
+} from "~/domain/workspace";
 import { useDemoWorkspace } from "~/hooks/useDemoWorkspace";
 import { roundToNearestQuarter } from "~/lib/util";
 import { EmptyState } from "./CaseworkUI";
@@ -29,20 +28,23 @@ export function CaseDetail({
 	onProgramFilterChange,
 	programId,
 }: {
-	caseId: string;
-	onProgramFilterChange: (programId?: string) => void;
-	programId?: string;
+	caseId: number;
+	onProgramFilterChange: (programId?: number) => void;
+	programId?: number;
 }) {
 	const {
 		addCaseworkerAssignment,
 		addConcreteService,
 		addNote,
 		cases,
+		createEnrollment,
 		editNote,
 		removeCaseworkerAssignment,
 		notes,
+		programs,
 		setPrimaryCaseworker,
 		services,
+		staff,
 		updateCaseStatus,
 		updateEnrollment,
 		visibleCases,
@@ -53,7 +55,8 @@ export function CaseDetail({
 	const [noteModalOpen, noteModalHandlers] = useDisclosure(false);
 	const caseRecord = cases.find((item) => item.id === caseId);
 	const [caseworkerToAdd, setCaseworkerToAdd] = useState<string | null>(null);
-	const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+	const [enrollmentProgramId, setEnrollmentProgramId] = useState<string | null>(null);
+	const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
 	const [noteError, setNoteError] = useState("");
 	const [noteDraft, setNoteDraft] = useState<NoteDraft>(
 		createEmptyNoteDraft(),
@@ -94,10 +97,10 @@ export function CaseDetail({
 		(enrollment) => enrollment.programId === programId,
 	);
 	const selectedProgram = selectedEnrollment
-		? getProgram(selectedEnrollment.programId)
+		? getProgram(programs, selectedEnrollment.programId)
 		: undefined;
 	const selectedAssignedCaseworkers = selectedEnrollment
-		? getAssignedCaseworkers(selectedEnrollment)
+		? getAssignedCaseworkers(staff, selectedEnrollment)
 		: [];
 	const availableCaseworkers = selectedEnrollment
 		? staff
@@ -111,33 +114,39 @@ export function CaseDetail({
 							(assignment) => assignment.staffId === person.id,
 						),
 				)
-				.map((person) => ({
-					value: person.id,
-					label: person.name,
-				}))
+		.map((person) => ({
+			value: String(person.id),
+			label: person.name,
+		}))
 		: [];
 	const enrollmentOptions =
 		caseRecord?.enrollments.map((enrollment) => {
-			const program = getProgram(enrollment.programId);
+			const program = getProgram(programs, enrollment.programId);
 			return {
-				value: enrollment.id,
-				label: program?.name ?? enrollment.programId,
+				value: String(enrollment.id),
+				label: program?.name ?? String(enrollment.programId),
 			};
 		}) ?? [];
 	const enrollmentPrograms =
-		caseRecord?.enrollments.reduce<Record<string, Program | undefined>>(
+		caseRecord?.enrollments.reduce<Record<number, Program | undefined>>(
 			(result, enrollment) => ({
 				...result,
-				[enrollment.id]: getProgram(enrollment.programId),
+				[enrollment.id]: getProgram(programs, enrollment.programId),
 			}),
 			{},
 		) ?? {};
+	const availableEnrollmentPrograms = programs.filter(
+		(program) =>
+			!caseRecord?.enrollments.some(
+				(enrollment) => enrollment.programId === program.id,
+			),
+	);
 	const programNotes = notes
 		.filter(
 			(note) =>
 				note.caseId === caseRecord?.id &&
 				(!selectedEnrollment ||
-					note.enrollmentId === selectedEnrollment.id),
+			note.enrollmentId === selectedEnrollment.id),
 		)
 		.sort((a, b) => b.date.localeCompare(a.date));
 	const programServices = services
@@ -145,7 +154,7 @@ export function CaseDetail({
 			(service) =>
 				service.caseId === caseRecord?.id &&
 				(!selectedEnrollment ||
-					service.enrollmentId === selectedEnrollment.id),
+			service.enrollmentId === selectedEnrollment.id),
 		)
 		.sort((a, b) => b.date.localeCompare(a.date));
 	const caseServicesTotal = useMemo(
@@ -189,7 +198,7 @@ export function CaseDetail({
 		setEditingNoteId(note.id);
 		setNoteError("");
 		setNoteDraft({
-			enrollmentId: note.enrollmentId,
+			enrollmentId: note.enrollmentId ?? "",
 			contactType: note.contactType,
 			summary: note.summary,
 			body: note.body,
@@ -212,7 +221,7 @@ export function CaseDetail({
 	function handleNoteEnrollmentChange(value: string | null) {
 		setNoteDraft((current) => ({
 			...current,
-			enrollmentId: value ?? "",
+			enrollmentId: value ? Number(value) : "",
 		}));
 	}
 
@@ -335,9 +344,29 @@ export function CaseDetail({
 		addCaseworkerAssignment(
 			currentCase.id,
 			selectedEnrollment.id,
-			caseworkerToAdd,
+			Number(caseworkerToAdd),
 		);
 		setCaseworkerToAdd(null);
+	}
+
+	function handleCreateEnrollment() {
+		if (!enrollmentProgramId) {
+			return;
+		}
+
+		const program = programs.find(
+			(item) => item.id === Number(enrollmentProgramId),
+		);
+
+		createEnrollment({
+			caseId: currentCase.id,
+			programId: Number(enrollmentProgramId),
+			supervisorId: program?.supervisorId,
+			status: "Active",
+			opened: new Date().toISOString().slice(0, 10),
+			goal: "",
+		});
+		setEnrollmentProgramId(null);
 	}
 
 	return (
@@ -368,7 +397,7 @@ export function CaseDetail({
 						? setPrimaryCaseworker(
 								currentCase.id,
 								selectedEnrollment.id,
-								staffId,
+								Number(staffId),
 							)
 						: undefined
 				}
@@ -377,7 +406,7 @@ export function CaseDetail({
 						? removeCaseworkerAssignment(
 								currentCase.id,
 								selectedEnrollment.id,
-								staffId,
+								Number(staffId),
 							)
 						: undefined
 				}
@@ -429,6 +458,39 @@ export function CaseDetail({
 					</Box>
 				) : null}
 
+				{availableEnrollmentPrograms.length > 0 ? (
+					<Box className='rounded-md border border-slate-200 bg-white p-4 shadow-sm'>
+						<Group align='flex-end' justify='space-between'>
+							<Box>
+								<Text fw={700}>Add program enrollment</Text>
+								<Text c='dimmed' size='sm'>
+									Attach this case to a program before adding program notes or services.
+								</Text>
+							</Box>
+							<Group align='flex-end'>
+								<Select
+									data={availableEnrollmentPrograms.map((program) => ({
+										value: String(program.id),
+										label: program.name,
+									}))}
+									label='Program'
+									onChange={setEnrollmentProgramId}
+									placeholder='Select program'
+									value={enrollmentProgramId}
+									w={260}
+								/>
+								<Button
+									disabled={!enrollmentProgramId}
+									onClick={handleCreateEnrollment}
+									radius={6}
+								>
+									Add enrollment
+								</Button>
+							</Group>
+						</Group>
+					</Box>
+				) : null}
+
 				<ProgramScopePanel
 					caseRecord={currentCase}
 					enrollmentOptions={enrollmentOptions}
@@ -441,11 +503,13 @@ export function CaseDetail({
 					onEditNote={openEditNote}
 					onProgramFilterChange={onProgramFilterChange}
 					programId={programId}
+					programs={programs}
 					programNotes={programNotes}
 					programServices={programServices}
 					selectedEnrollment={selectedEnrollment}
 					selectedProgram={selectedProgram}
 					serviceDraft={serviceDraft}
+					staff={staff}
 				/>
 
 				<RelatedPeoplePanel
@@ -453,7 +517,7 @@ export function CaseDetail({
 					onNavigateToCase={(linkedCaseId) =>
 						navigate({
 							to: "/cases/$caseId",
-							params: { caseId: linkedCaseId },
+							params: { caseId: String(linkedCaseId) },
 						})
 					}
 				/>

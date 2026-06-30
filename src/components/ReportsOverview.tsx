@@ -11,30 +11,25 @@ import {
 } from '@mantine/core'
 import { Download, FileChartColumn } from 'lucide-react'
 import { useState } from 'react'
-import type { Grantor } from '~/domain/demo-data'
+import type { Grantor } from '~/domain/workspace'
 import {
   buildGrantReport,
   formatCurrency,
-} from '~/domain/demo-data'
+} from '~/domain/workspace'
 import { useDemoWorkspace } from '~/hooks/useDemoWorkspace'
 import { MetricTile } from './CaseworkUI'
 
-const grantors: Grantor[] = [
-  'ANFRC',
-  'A-RESET',
-  'Private Foundation',
-  'Medicaid',
-]
-
 export function ReportsOverview() {
-  const { cases, notes, services } = useDemoWorkspace()
-  const [grantor, setGrantor] = useState<Grantor>('ANFRC')
+  const { cases, notes, programs, services } = useDemoWorkspace()
+  const grantors = Array.from(new Set(programs.map((program) => program.grantor)))
+  const [grantor, setGrantor] = useState<Grantor>('')
   const [message, setMessage] = useState('')
-  const report = buildGrantReport(cases, notes, services, grantor)
+  const selectedGrantor = grantor || grantors[0] || ''
+  const report = buildGrantReport(programs, cases, notes, services, selectedGrantor)
 
   function exportReport() {
     setMessage(
-      `${grantor} CSV prepared with ${report.totalEnrollments} enrollments and ${formatCurrency(
+      `${selectedGrantor} CSV prepared with ${report.totalEnrollments} enrollments and ${formatCurrency(
         report.dollarsSpent,
       )} in services.`,
     )
@@ -68,10 +63,11 @@ export function ReportsOverview() {
           onChange={(value) => {
             setMessage('')
             if (value) {
-              setGrantor(value as Grantor)
+              setGrantor(value)
             }
           }}
-          value={grantor}
+          placeholder="Add programs with grantors"
+          value={selectedGrantor || null}
           w={260}
         />
 

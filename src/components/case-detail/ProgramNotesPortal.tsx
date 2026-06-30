@@ -1,6 +1,7 @@
 import { ActionIcon, Badge, Box, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { FileText, Pencil, Plus } from "lucide-react";
-import { formatDate, getStaff } from "~/domain/demo-data";
+import type { Staff } from "~/domain/workspace";
+import { formatDate, getStaff } from "~/domain/workspace";
 import { EmptyState, ProgramBadge } from "../CaseworkUI";
 import type { EnrollmentPrograms, ProgramNote } from "./types";
 
@@ -9,11 +10,13 @@ export function ProgramNotesPortal({
 	notes,
 	onAddNote,
 	onEditNote,
+	staff,
 }: {
 	enrollmentPrograms: EnrollmentPrograms;
 	notes: ProgramNote[];
 	onAddNote: () => void;
 	onEditNote: (note: ProgramNote) => void;
+	staff: Staff[];
 }) {
 	return (
 		<Stack gap='md' mt='md'>
@@ -46,9 +49,9 @@ export function ProgramNotesPortal({
 								<Group gap='xs'>
 									<ProgramBadge
 										program={
-											enrollmentPrograms[
-												note.enrollmentId
-											]
+											note.enrollmentId
+												? enrollmentPrograms[note.enrollmentId]
+												: undefined
 										}
 									/>
 									<Text fw={700}>{note.summary}</Text>
@@ -64,7 +67,7 @@ export function ProgramNotesPortal({
 								</Group>
 								<Text c='dimmed' mt={4} size='sm'>
 									{note.contactType} -{" "}
-									{getStaff(note.authorId)?.name}
+									{getStaff(staff, note.authorId)?.name}
 								</Text>
 							</Box>
 							<Group gap='xs' wrap='nowrap'>

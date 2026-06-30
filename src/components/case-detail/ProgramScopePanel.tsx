@@ -13,12 +13,13 @@ import type {
 	CaseProgramEnrollment,
 	ClientCase,
 	Program,
-} from "~/domain/demo-data";
+	Staff,
+} from "~/domain/workspace";
 import {
 	formatDate,
 	getPrimaryCaseworker,
 	getProgram,
-} from "~/domain/demo-data";
+} from "~/domain/workspace";
 import {
 	EmptyState,
 	ProgramBadge,
@@ -46,11 +47,13 @@ export function ProgramScopePanel({
 	onEditNote,
 	onProgramFilterChange,
 	programId,
+	programs,
 	programNotes,
 	programServices,
 	selectedEnrollment,
 	selectedProgram,
 	serviceDraft,
+	staff,
 }: {
 	caseRecord: ClientCase;
 	enrollmentOptions: EnrollmentOption[];
@@ -61,13 +64,15 @@ export function ProgramScopePanel({
 	onDraftChange: (draft: ServiceDraft) => void;
 	onEditEnrollment: () => void;
 	onEditNote: (note: ProgramNote) => void;
-	onProgramFilterChange: (programId?: string) => void;
-	programId?: string;
+	onProgramFilterChange: (programId?: number) => void;
+	programId?: number;
+	programs: Program[];
 	programNotes: ProgramNote[];
 	programServices: ProgramService[];
 	selectedEnrollment: CaseProgramEnrollment | undefined;
 	selectedProgram: Program | undefined;
 	serviceDraft: ServiceDraft;
+	staff: Staff[];
 }) {
 	return (
 		<Box className='rounded-md border border-slate-200 bg-white p-4 shadow-sm'>
@@ -121,7 +126,9 @@ export function ProgramScopePanel({
 								enrollment={enrollment}
 								key={enrollment.id}
 								onProgramFilterChange={onProgramFilterChange}
+								programs={programs}
 								selected={enrollment.programId === programId}
+								staff={staff}
 							/>
 						))}
 					</Stack>
@@ -153,6 +160,7 @@ export function ProgramScopePanel({
 								notes={programNotes}
 								onAddNote={onAddNote}
 								onEditNote={onEditNote}
+								staff={staff}
 							/>
 						</Tabs.Panel>
 
@@ -184,14 +192,18 @@ export function ProgramScopePanel({
 function ProgramEnrollmentRow({
 	enrollment,
 	onProgramFilterChange,
+	programs,
 	selected,
+	staff,
 }: {
 	enrollment: CaseProgramEnrollment;
-	onProgramFilterChange: (programId?: string) => void;
+	onProgramFilterChange: (programId?: number) => void;
+	programs: Program[];
 	selected: boolean;
+	staff: Staff[];
 }) {
-	const program = getProgram(enrollment.programId);
-	const primaryCaseworker = getPrimaryCaseworker(enrollment);
+	const program = getProgram(programs, enrollment.programId);
+	const primaryCaseworker = getPrimaryCaseworker(staff, enrollment);
 
 	return (
 		<button

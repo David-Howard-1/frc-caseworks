@@ -75,7 +75,7 @@ export function NoteEditorModal({
 						label='Program'
 						onChange={onEnrollmentChange}
 						required
-						value={draft.enrollmentId}
+						value={draft.enrollmentId ? String(draft.enrollmentId) : null}
 					/>
 					<Select
 						allowDeselect={false}

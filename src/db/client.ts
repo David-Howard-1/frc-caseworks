@@ -1,8 +1,7 @@
 import { drizzle } from 'drizzle-orm/mysql2'
 import { createPool } from 'mysql2/promise'
-import * as schema from './schema'
 
-type Database = ReturnType<typeof drizzle<typeof schema>>
+export type Database = ReturnType<typeof drizzle>
 
 let db: Database | null = null
 
@@ -17,7 +16,7 @@ export function getDb() {
 
   if (!db) {
     const pool = createPool(process.env.DATABASE_URL)
-    db = drizzle(pool, { mode: 'default', schema }) as unknown as Database
+    db = drizzle({ client: pool })
   }
 
   return db
