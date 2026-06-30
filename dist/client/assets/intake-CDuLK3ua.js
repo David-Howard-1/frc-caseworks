@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-Bx3i_E5L.js";import{t}from"./IntakeWorkflow-CbatVvMy.js";import{r as n}from"./index-BinYRvkH.js";var r=e();function i(){return(0,r.jsx)(t,{initialSearch:n.useSearch()})}export{i as component};

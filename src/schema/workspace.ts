@@ -218,6 +218,9 @@ export const AddConcreteServiceRecordSchema = z.object({
 export const CreateCaseFromIntakeSchema = z.object({
   intake: IntakeSubmissionInputSchema,
   currentStaffId: EntityIdSchema,
+  existingPersonId: EntityIdSchema.optional(),
+  existingCaseId: EntityIdSchema.optional(),
+  mode: z.enum(['new_case', 'reintake']).default('new_case'),
 })
 
 export type AddNoteInput = z.infer<typeof AddNoteSchema>

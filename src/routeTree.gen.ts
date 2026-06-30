@@ -10,10 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReportsRouteImport } from './routes/reports'
-import { Route as IntakeRouteImport } from './routes/intake'
+import { Route as IntakeRouteRouteImport } from './routes/intake/route'
 import { Route as CasesRouteRouteImport } from './routes/cases/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as IntakeIndexRouteImport } from './routes/intake/index'
 import { Route as CasesIndexRouteImport } from './routes/cases/index'
+import { Route as IntakeNewRouteImport } from './routes/intake/new'
 import { Route as CasesCaseIdRouteImport } from './routes/cases/$caseId'
 
 const ReportsRoute = ReportsRouteImport.update({
@@ -21,7 +23,7 @@ const ReportsRoute = ReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IntakeRoute = IntakeRouteImport.update({
+const IntakeRouteRoute = IntakeRouteRouteImport.update({
   id: '/intake',
   path: '/intake',
   getParentRoute: () => rootRouteImport,
@@ -36,10 +38,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IntakeIndexRoute = IntakeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => IntakeRouteRoute,
+} as any)
 const CasesIndexRoute = CasesIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CasesRouteRoute,
+} as any)
+const IntakeNewRoute = IntakeNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => IntakeRouteRoute,
 } as any)
 const CasesCaseIdRoute = CasesCaseIdRouteImport.update({
   id: '/$caseId',
@@ -50,26 +62,31 @@ const CasesCaseIdRoute = CasesCaseIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cases': typeof CasesRouteRouteWithChildren
-  '/intake': typeof IntakeRoute
+  '/intake': typeof IntakeRouteRouteWithChildren
   '/reports': typeof ReportsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
+  '/intake/new': typeof IntakeNewRoute
   '/cases/': typeof CasesIndexRoute
+  '/intake/': typeof IntakeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/intake': typeof IntakeRoute
   '/reports': typeof ReportsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
+  '/intake/new': typeof IntakeNewRoute
   '/cases': typeof CasesIndexRoute
+  '/intake': typeof IntakeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cases': typeof CasesRouteRouteWithChildren
-  '/intake': typeof IntakeRoute
+  '/intake': typeof IntakeRouteRouteWithChildren
   '/reports': typeof ReportsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
+  '/intake/new': typeof IntakeNewRoute
   '/cases/': typeof CasesIndexRoute
+  '/intake/': typeof IntakeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -79,9 +96,11 @@ export interface FileRouteTypes {
     | '/intake'
     | '/reports'
     | '/cases/$caseId'
+    | '/intake/new'
     | '/cases/'
+    | '/intake/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/intake' | '/reports' | '/cases/$caseId' | '/cases'
+  to: '/' | '/reports' | '/cases/$caseId' | '/intake/new' | '/cases' | '/intake'
   id:
     | '__root__'
     | '/'
@@ -89,13 +108,15 @@ export interface FileRouteTypes {
     | '/intake'
     | '/reports'
     | '/cases/$caseId'
+    | '/intake/new'
     | '/cases/'
+    | '/intake/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CasesRouteRoute: typeof CasesRouteRouteWithChildren
-  IntakeRoute: typeof IntakeRoute
+  IntakeRouteRoute: typeof IntakeRouteRouteWithChildren
   ReportsRoute: typeof ReportsRoute
 }
 
@@ -112,7 +133,7 @@ declare module '@tanstack/react-router' {
       id: '/intake'
       path: '/intake'
       fullPath: '/intake'
-      preLoaderRoute: typeof IntakeRouteImport
+      preLoaderRoute: typeof IntakeRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cases': {
@@ -129,12 +150,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/intake/': {
+      id: '/intake/'
+      path: '/'
+      fullPath: '/intake/'
+      preLoaderRoute: typeof IntakeIndexRouteImport
+      parentRoute: typeof IntakeRouteRoute
+    }
     '/cases/': {
       id: '/cases/'
       path: '/'
       fullPath: '/cases/'
       preLoaderRoute: typeof CasesIndexRouteImport
       parentRoute: typeof CasesRouteRoute
+    }
+    '/intake/new': {
+      id: '/intake/new'
+      path: '/new'
+      fullPath: '/intake/new'
+      preLoaderRoute: typeof IntakeNewRouteImport
+      parentRoute: typeof IntakeRouteRoute
     }
     '/cases/$caseId': {
       id: '/cases/$caseId'
@@ -160,10 +195,24 @@ const CasesRouteRouteWithChildren = CasesRouteRoute._addFileChildren(
   CasesRouteRouteChildren,
 )
 
+interface IntakeRouteRouteChildren {
+  IntakeNewRoute: typeof IntakeNewRoute
+  IntakeIndexRoute: typeof IntakeIndexRoute
+}
+
+const IntakeRouteRouteChildren: IntakeRouteRouteChildren = {
+  IntakeNewRoute: IntakeNewRoute,
+  IntakeIndexRoute: IntakeIndexRoute,
+}
+
+const IntakeRouteRouteWithChildren = IntakeRouteRoute._addFileChildren(
+  IntakeRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CasesRouteRoute: CasesRouteRouteWithChildren,
-  IntakeRoute: IntakeRoute,
+  IntakeRouteRoute: IntakeRouteRouteWithChildren,
   ReportsRoute: ReportsRoute,
 }
 export const routeTree = rootRouteImport

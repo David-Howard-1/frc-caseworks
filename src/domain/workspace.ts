@@ -38,6 +38,34 @@ export type Staff = {
   programs: EntityId[]
 }
 
+export type PersonRole =
+  | 'client'
+  | 'caregiver'
+  | 'child'
+  | 'household_member'
+  | 'collateral_contact'
+
+export type Person = {
+  id: EntityId
+  frcId: EntityId
+  role: PersonRole
+  firstName?: string
+  middleName?: string
+  lastName?: string
+  preferredName?: string
+  pronouns?: string
+  approximateAge?: string
+  dateOfBirth?: string
+  phone?: string
+  email?: string
+  addressLine1?: string
+  addressLine2?: string
+  city?: string
+  state?: string
+  postalCode?: string
+  county?: string
+}
+
 export type Intake = {
   intakeDate: string
   referralSource?: string
@@ -233,6 +261,7 @@ export type WorkspaceSnapshot = {
   frcs: Frc[]
   programs: Program[]
   staff: Staff[]
+  people: Person[]
   cases: ClientCase[]
   intakeSubmissions: IntakeSubmission[]
   notes: CaseNote[]
@@ -243,6 +272,7 @@ export const emptyWorkspaceSnapshot: WorkspaceSnapshot = {
   frcs: [],
   programs: [],
   staff: [],
+  people: [],
   cases: [],
   intakeSubmissions: [],
   notes: [],

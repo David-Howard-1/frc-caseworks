@@ -3451,7 +3451,7 @@ var defaultSerovalPlugins = [
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-C_kWUpD0.js");
+	const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-B2OJmqQ4.js");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -3475,51 +3475,51 @@ async function getStartManifest(matchedRoutes) {
 var manifest = {
 	"0595ebad747dfd91d0d7ad6de0e45ec0a094fafa75cd046b832c9e9e5d146187": {
 		functionName: "createEnrollmentFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	},
 	"15425a3643c2d4efd85116d103cf5d6b77d1065c0ff5813527526ad6cb1b70f1": {
 		functionName: "editNoteFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	},
 	"201edf323e0e20530e2d2a39864177726e7d18e8d047078b2fa4f80a58f4602e": {
 		functionName: "addConcreteServiceFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	},
 	"54b1cbe51673a785cd9510adda0ba2c70c32f71511477d51e9fc66bffb693cde": {
 		functionName: "removeCaseworkerAssignmentFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	},
 	"61c08573a3051e28ca0f34f3b695aa91de0199916e956b8d19cb9b0f765153b8": {
 		functionName: "addCaseworkerAssignmentFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	},
 	"6730d51c9ac496760d97e83dfbebdeb3105ab75ef2e3cceefbe2ff38942170d0": {
 		functionName: "loadWorkspaceFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	},
 	"8893be4a641ce0bb80843bde3941a481dae5de97b9aaceb4ccee2bd45d239b1f": {
 		functionName: "setPrimaryCaseworkerFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	},
 	"9aa7f3fae4ee3d25dc6f1294ecd91487430904ac52b761f1b57d678aa391144d": {
 		functionName: "updateEnrollmentFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	},
 	"a0e1e6277bc1cf03f192087085b1f1170465d350fb9671773e546042419b8ec5": {
 		functionName: "addNoteFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	},
 	"b62a7345f5295a436067386205c27babec3b5ff9d822c21d9e527d6b7ee2c577": {
 		functionName: "updateCaseStatusFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	},
 	"e3ddf4cf675e5e5c98e167da44b4f15a21fe12519b6b5cf3519bd6a5dc484a8e": {
 		functionName: "createCaseFromIntakeFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	},
 	"ec223ff61e50d5b7b3af8782df898724474bfd828bcc1884ef00cc4d54480d5f": {
 		functionName: "updateIntakeFieldFn_createServerFn_handler",
-		importer: () => import("./assets/workspace-G87cIdA9.js")
+		importer: () => import("./assets/workspace-CLgAE40X.js")
 	}
 };
 async function getServerFnById(id, access) {
@@ -5397,7 +5397,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./assets/router-DyY8oJ1r.js"),
+		import("./assets/router-Bpdh4wA1.js"),
 		import("./assets/start-AdjGxi1V.js"),
 		import("./assets/empty-plugin-adapters-32W6gJO6.js")
 	]);
